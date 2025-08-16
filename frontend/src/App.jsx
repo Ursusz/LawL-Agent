@@ -33,7 +33,7 @@ function App() {
                     ))}
                   </ul>
                 ) : (
-                  <span> {item.error || 'Nicio referinta legala gasita sau procesata.'}</span>
+                  <span> {item.error || 'No refference has been found or processed.'}</span>
                 )}
               </li>
             ))}

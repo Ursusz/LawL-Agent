@@ -22,7 +22,7 @@ function FileUpload({ setResults }) {
     const results = await response.json();
     setResults(results);
   } catch (error) {
-    console.error("Eroare la trimiterea fișierelor:", error);
+    console.error("Error sending files:", error);
   }
   };
 
