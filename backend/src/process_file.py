@@ -4,9 +4,10 @@ import parse_documents, extract_references, search_laws
 
 async def process_file(file: UploadFile) -> Dict[str, Any]:
     try:
-        text = await parse_documents.parse_file(file.filename, await file.read())
-        references = extract_references.extract_law_references(text)
-        law_details = search_laws.find_laws(references)
+        document_text = await parse_documents.parse_file(file.filename, await file.read())
+        references = extract_references.extract_law_references(document_text)
+        law_details = search_laws.find_laws(references, document_text)
+        # print(law_details)
         # excerpt = summarize.create_summary(text)
         results = {
             "filename": file.filename,

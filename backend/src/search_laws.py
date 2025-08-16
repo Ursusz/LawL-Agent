@@ -1,5 +1,6 @@
 import os
 from PyPDF2 import PdfReader
+from models import bm25 
 
 REFERENCE_DOCS_DIR = '../reference_docs'
 TRUSTED_DOMAINS = [
@@ -40,11 +41,12 @@ def fetch_local_reference(law_ref):
     text = extract_text_pdf(filepath)
     return text
 
-def find_laws(references):
+def find_laws(references, document_text):
     details = {}
     for ref in references:
         text = fetch_local_reference(ref)
         if text:
-            details[ref] = text
+            # details[ref] = text
+            details[ref] = bm25.get_most_relevant_fragment(law_text=text, context=document_text)
     
     return details
