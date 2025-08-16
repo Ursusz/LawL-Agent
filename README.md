@@ -5,7 +5,7 @@
 Dependinte:
 
 * **Python > 3.12**
-* **Node.js > 18** sau mai nou
+* **Node.js** de [aici](https://nodejs.org/en/download)
 * **uv** - Se poate instala cu `pipx` pentru a evita conflictele de sistem:
     ```bash
     pipx install uv
@@ -50,4 +50,4 @@ Dependinte:
     ```bash
     npm start
     ```
-    Aplicaeia se va deschide pe `http://localhost:3000`.
+    Aplicatia se va deschide pe `http://localhost:3000`.

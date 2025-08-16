@@ -37,7 +37,6 @@ async def search_laws_in_documents(files: List[UploadFile] = File(...)):
                 "references": references,
                 "law_details": law_details,
                 # "excerpt": excrpt
-                # "laws_found": law_details
             })
 
         except Exception as e:

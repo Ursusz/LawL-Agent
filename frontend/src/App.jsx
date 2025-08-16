@@ -13,7 +13,7 @@ function App() {
 
       {results && (
         <div className="p-6 bg-green-500 text-white rounded-lg mt-6 w-full max-w-lg shadow-lg">
-          <h2 className="text-2xl font-semibold mb-2">Rezultate:</h2>
+          <h2 className="text-2xl font-semibold mb-2">Results:</h2>
           <ul className="list-disc pl-5">
             {results.map((item, i) => (
               <li key={i}>
