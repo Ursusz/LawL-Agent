@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: lawl_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    networks:
+      - lawl_net
+
+  frontend:
+    build: ./frontend
+    container_name: lawl_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    stdin_open: true
+    tty: true
+    networks:
+      - lawl_net
+
+networks:
+  lawl_net:
+    driver: bridge
