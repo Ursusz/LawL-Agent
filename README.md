@@ -24,7 +24,7 @@
     ```
 3. 
     ```bash
-    uv pip install -r requirements.txt
+    uv pip install -r requirements.lock
     ```
 4.
     ```bash
