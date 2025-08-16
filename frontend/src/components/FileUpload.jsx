@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'
 
 function FileUpload({ setResults }) {
   const [dragActive, setDragActive] = useState(false);
+  const navigate = useNavigate();
 
   const handleFiles = async (files) => {
     const formData = new FormData();
@@ -16,13 +18,15 @@ function FileUpload({ setResults }) {
     });
 
     if (!response.ok) {
-      throw new Error(`Eroare HTTP! Status: ${response.status}`);
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     const results = await response.json();
-    setResults(results);
-  } catch (error) {
+
+    navigate('/results', { state: { results: results } });
+    } catch (error) {
     console.error("Error sending files:", error);
+    navigate('/results', { state: { error: "An error occured during upload." } })
   }
   };
 
@@ -42,13 +46,21 @@ function FileUpload({ setResults }) {
       className={`w-full max-w-lg h-48 flex flex-col items-center justify-center border-4 border-dashed rounded-lg
         ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white'} transition-colors`}
     >
+
+    <input
+      id="file-upload-input"
+      type="file"
+      multiple
+      className="hidden"
+      onChange={(e) => handleFiles(e.target.files)}
+    />
+
+    <label 
+      htmlFor="file-upload-input"
+      className="cursor-pointer px-4 py-2 w-full max-w-lg h-48 flex flex-row items-center justify-center"
+    >
       <p className="text-gray-500 mb-2">Click or drag files to upload</p>
-      <input
-        type="file"
-        multiple
-        className="absolute w-full h-full opacity-0 cursor-pointer"
-        onChange={(e) => handleFiles(e.target.files)}
-      />
+    </label>
     </div>
   );
 }

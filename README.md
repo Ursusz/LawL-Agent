@@ -21,14 +21,18 @@ Dependinte:
     ```
 2. 
     ```bash
-    uv venv
-    source venv/bin/activate
+    uv lawl
+    source lawl/bin/activate
     ```
 3. 
     ```bash
     uv pip install -r requirements.txt
     ```
-4. 
+4.
+    ```bash
+    cd src
+    ```
+5. 
     ```bash
     uvicorn main:app --reload
     ```

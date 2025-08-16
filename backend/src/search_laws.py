@@ -20,6 +20,8 @@ def find_local_reference(law_ref):
     return None
 
 def extract_text_pdf(filepath):
+    if filepath is None:
+        return 'The text of the law was not found.'
     reader = PdfReader(filepath)
     text = ''
     for page in reader.pages:
