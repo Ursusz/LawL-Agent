@@ -2,7 +2,7 @@
 
 ### Cerinte
 
-* **Python > 3.12**
+* **Python >= 3.12**
 * **Node.js** de [aici](https://nodejs.org/en/download)
 * **uv** - Se poate instala cu `pipx` pentru a evita conflictele de sistem:
     ```bash
@@ -19,7 +19,7 @@
     ```
 2. 
     ```bash
-    uv lawl
+    uv venv lawl
     source lawl/bin/activate
     ```
 3. 
