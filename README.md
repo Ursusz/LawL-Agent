@@ -2,8 +2,6 @@
 
 ### Cerinte
 
-Dependinte:
-
 * **Python > 3.12**
 * **Node.js** de [aici](https://nodejs.org/en/download)
 * **uv** - Se poate instala cu `pipx` pentru a evita conflictele de sistem:
