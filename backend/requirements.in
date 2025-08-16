@@ -1,0 +1,9 @@
+fastapi[all]
+python-multipart
+uvicorn[standard]
+beautifulsoup4
+odfpy
+python-docx
+pypdf2
+scikit-learn
+numpy
