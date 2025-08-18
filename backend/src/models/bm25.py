@@ -15,7 +15,7 @@ def extract_law_fragments(law_text):
         if not is_example_article(fragm):
             filtered_articles.append(fragm)
 
-    print(filtered_articles)
+    # print(filtered_articles)
     return filtered_articles
 
 def tokenize(fragment):

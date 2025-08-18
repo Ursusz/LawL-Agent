@@ -1,6 +1,6 @@
 import os
 from PyPDF2 import PdfReader
-from models import bm25 
+from models import bm25, gemini_summary
 
 REFERENCE_DOCS_DIR = '../reference_docs'
 TRUSTED_DOMAINS = [
@@ -42,11 +42,19 @@ def fetch_local_reference(law_ref):
     return text
 
 def find_laws(references, document_text):
-    details = {}
+    laws = {}
     for ref in references:
-        text = fetch_local_reference(ref)
-        if text:
-            # details[ref] = text
-            details[ref] = bm25.get_most_relevant_fragment(law_text=text, context=document_text)
-    
-    return details
+        law_text = fetch_local_reference(ref)
+        if law_text:
+            relevant_article = bm25.get_most_relevant_fragment(law_text=law_text, context=document_text)
+            relevant_article_summary = gemini_summary.get_text_summary(relevant_article)
+            law_summary = gemini_summary.get_text_summary(law_text)
+            law_simplified = gemini_summary.get_law_text_simplified(law_text)
+            laws[ref] = {
+                "law": law_text,
+                "law_summary": law_summary,
+                "law_simplified": law_simplified,
+                "relevant_article": relevant_article,
+                "relevant_article_summary": relevant_article_summary,
+            }
+    return laws

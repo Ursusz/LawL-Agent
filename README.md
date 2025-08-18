@@ -13,6 +13,8 @@
 
 ### 1. Configure Backend
 
+## Google Gemini API KEY -> https://aistudio.google.com/app/apikey
+
 1. 
     ```bash
     cd backend

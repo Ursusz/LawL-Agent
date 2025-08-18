@@ -7,3 +7,4 @@ python-docx
 pypdf2
 scikit-learn
 numpy
+google-genai

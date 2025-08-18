@@ -1,49 +1,153 @@
-import React from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 function Results() {
-    const location = useLocation();
-    const { results } = location.state || {};
-    const navigate = useNavigate();
+  const location = useLocation();
+  const { results } = location.state || {};
+  const navigate = useNavigate();
+  const [openLaw, setOpenLaw] = useState({});
+  const [openLawText, setOpenLawText] = useState({});
+  const [openArticle, setOpenArticle] = useState({});
+  const [openSummaryArticle, setOpenSummaryArticle] = useState({});
+  const [openLawSummary, setOpenLawSummary] = useState({});
+  const [openLawSimplified, setOpenLawSimplified] = useState({});
 
-    return (
-        <div>
-            <button onClick={() => navigate('/')}><p className='font-semibold mb-2 text-2xl absolute top-4 right-4 bg-green-500 text-white rounded-lg pl-1 pr-1'>Home</p></button>
-            {results ? (
-                <div className="p-6 bg-green-500 text-white rounded-lg mt-6 w-full max-w-lg shadow-lg">
-                    <h2 className="text-2xl font-semibold mb-2">Results:</h2>
-                    <ul className="list-disc pl-5">
-                        {results.map((item, i) => (
-                            <li key={i}>
-                                <strong>{item.filename}</strong>:
-                                <br />
-                                {item.references && item.references.length > 0 && (
-                                    <>
-                                        <p>Referinte gasite: {item.references.join(', ')}</p>
-                                    </>
-                                )}
-                                {item.law_details && Object.keys(item.law_details).length > 0 ? (
-                                    <ul>
-                                        {Object.entries(item.law_details).map(([lawRef, lawDetails]) => (
-                                            <li key={lawRef} className="mt-2">
-                                                <strong>{lawRef}</strong>: {lawDetails}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <span> {item.error || 'No reference has been found or processed.'}</span>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
+  return (
+    <div className="p-6">
+      <button
+        onClick={() => navigate('/')}
+        className="font-semibold text-lg absolute top-4 right-4 bg-green-500 text-white rounded-lg px-3 py-1"
+      >
+        Home
+      </button>
+
+      {results ? (
+        <div className="space-y-4 max-w-6xl mx-auto">
+          <h2 className="text-2xl font-semibold">Referințe legale găsite:</h2>
+
+          {results.map((item, i) => (
+            <div key={i} className="bg-white shadow-md rounded-xl p-4">
+              <h3 className="font-bold text-lg mb-2">{item.filename}</h3>
+
+              {item.references?.length > 0 && (
+                <p className="text-sm text-gray-600 mb-2">
+                  Referințe: {item.references.join(', ')}
+                </p>
+              )}
+
+              {item.law_details && Object.keys(item.law_details).length > 0 ? (
+                <div className="space-y-2">
+                  {Object.entries(item.law_details).map(([lawRef, law_details]) => (
+                    <div key={lawRef} className="border rounded-lg p-2">
+                      <button
+                        className="w-full text-left font-semibold px-3 py-2 bg-green-100 hover:bg-green-200 rounded-lg"
+                        onClick={() => setOpenLaw(openLaw === lawRef ? null : lawRef)}
+                      >
+                        🔎 {lawRef}
+                      </button>
+
+                      {openLaw === lawRef && (
+                        <div className="p-3 bg-gray-50 rounded-b-lg ml-2 mt-2 space-y-2">
+                          {/* Text de lege intreg */}
+                          <button
+                            className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                            onClick={() => setOpenLawText({
+                              ...openLawText,
+                              [lawRef]: !openLawText[lawRef]
+                            })}
+                          >
+                            ⚖️ Lege
+                          </button>
+                          {openLawText[lawRef] && (
+                            <div className="ml-4 text-sm mt-1 space-y-1">
+                              {law_details.law}
+                            </div>
+                          )}
+
+                          {/* Text de lege sumarizat */}
+                          <button
+                            className="w-full text-left font-semibold px-2 py-1 bg-emerald-100 hover:bg-emerald-200 rounded"
+                            onClick={() => setOpenLawSummary({
+                              ...openLawSummary,
+                              [lawRef]: !openLawSummary[lawRef]
+                            })}
+                          >
+                            🔎 Sumar Lege
+                          </button>
+                          {openLawSummary[lawRef] && (
+                            <div className="ml-4 text-sm mt-1 space-y-1">
+                              {law_details.law_summary}
+                            </div>
+                          )}
+
+                          {/* Articolul cel mai relevant */}
+                          <button
+                            className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                            onClick={() => setOpenArticle({
+                              ...openArticle,
+                              [lawRef]: !openArticle[lawRef]
+                            })}
+                          >
+                            📜 Articol Relevant
+                          </button>
+                          {openArticle[lawRef] && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {law_details.relevant_article}
+                            </div>
+                          )}
+
+                          {/* Sumarul articolului cel mai relevant */}
+                          <button
+                            className="w-full text-left font-semibold px-2 py-1 bg-emerald-100 hover:bg-emerald-200 rounded"
+                            onClick={() => setOpenSummaryArticle({
+                              ...openSummaryArticle,
+                              [lawRef]: !openSummaryArticle[lawRef]
+                            })}
+                          >
+                            ✍️ Sumar Articol
+                          </button>
+                          {openSummaryArticle[lawRef] && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {law_details.relevant_article_summary}
+                            </div>
+                          )}
+
+                          {/* Lege simplificata */}
+                          <button
+                            className="w-full text-left font-semibold px-2 py-1 bg-green-300 hover:bg-green-400 rounded"
+                            onClick={() => setOpenLawSimplified({
+                              ...openLawSimplified,
+                              [lawRef]: !openLawSimplified[lawRef]
+                            })}
+                          >
+                            🙂 Lege Simplificata
+                          </button>
+                          {openLawSimplified[lawRef] && (
+                            <div className="ml-4 mt-1 space-y-1">
+                              {law_details.law_simplified}
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-            ) : (
-                <div className="p-6 bg-red-500 text-white rounded-lg mt-6 w-full max-w-lg shadow-lg">
-                    No results have been found.
-                </div>
-            )}
+              ) : (
+                <span className="text-red-500">
+                  {item.error || 'No references have been processed.'}
+                </span>
+              )}
+            </div>
+          ))}
         </div>
-    );
+      ) : (
+        <div className="p-6 bg-red-500 text-white rounded-lg mt-6 w-full max-w-lg shadow-lg">
+          No results have been found.
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default Results;

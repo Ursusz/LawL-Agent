@@ -1,36 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 
-function FileUpload({ setResults }) {
+function FileUpload({ setLoading }) {
   const [dragActive, setDragActive] = useState(false);
   const navigate = useNavigate();
 
   const handleFiles = async (files) => {
     const formData = new FormData();
     Array.from(files).forEach(file => {
-        formData.append('files', file);
+      formData.append('files', file);
     });
 
     try {
-        const response = await fetch('http://localhost:8000/search', {
-            method: 'POST',
-            body: formData,
-    });
+      setLoading(true);
+      const response = await fetch('http://localhost:8000/search', {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
 
-    const results = await response.json();
-
-    navigate('/results', { state: { results: results } });
+      const results = await response.json();
+      navigate('/results', { state: { results: results } });
     } catch (error) {
-    console.error("Error sending files:", error);
-    navigate('/results', { state: { error: "An error occured during upload." } })
-  }
+      console.error("Error sending files:", error);
+      navigate('/results', { state: { error: "An error occured during upload." } })
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDrop = (e) => {    
+  const handleDrop = (e) => {
     e.preventDefault();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -47,20 +49,20 @@ function FileUpload({ setResults }) {
         ${dragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white'} transition-colors`}
     >
 
-    <input
-      id="file-upload-input"
-      type="file"
-      multiple
-      className="hidden"
-      onChange={(e) => handleFiles(e.target.files)}
-    />
+      <input
+        id="file-upload-input"
+        type="file"
+        multiple
+        className="hidden"
+        onChange={(e) => handleFiles(e.target.files)}
+      />
 
-    <label 
-      htmlFor="file-upload-input"
-      className="cursor-pointer px-4 py-2 w-full max-w-lg h-48 flex flex-row items-center justify-center"
-    >
-      <p className="text-gray-500 mb-2">Click or drag files to upload</p>
-    </label>
+      <label
+        htmlFor="file-upload-input"
+        className="cursor-pointer px-4 py-2 w-full max-w-lg h-48 flex flex-row items-center justify-center"
+      >
+        <p className="text-gray-500 mb-2">Click or drag files to upload</p>
+      </label>
     </div>
   );
 }
