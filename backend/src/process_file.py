@@ -7,20 +7,14 @@ async def process_file(file: UploadFile) -> Dict[str, Any]:
         document_text = await parse_documents.parse_file(file.filename, await file.read())
         references = extract_references.extract_law_references(document_text)
         laws = search_laws.find_laws(references, document_text)
-
-        # print(law_details)
-        # excerpt = summarize.create_summary(text)
         results = {
             "filename": file.filename,
             "references": references,
             "law_details": laws
-            # "excerpt": excrpt
         }
-
     except Exception as e:
         results = {
             "filename": file.filename,
             "error": f"Failed to process file: {e}"
         }
-
     return results
