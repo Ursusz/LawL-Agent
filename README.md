@@ -13,7 +13,8 @@
 
 ### 1. Configure Backend
 
-## Google Gemini API KEY -> https://aistudio.google.com/app/apikey
+#### Google Gemini API KEY -> https://aistudio.google.com/app/apikey
+ > In folderul backend se va crea un fisier **.env** cu urmatorul continut: GEMINI_API_KEY=your_api_key
 
 1. 
     ```bash
