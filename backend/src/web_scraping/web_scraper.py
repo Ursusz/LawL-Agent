@@ -1,6 +1,7 @@
 import requests
 from lxml import html
 import re, os
+from utilities import parse_law_title
 
 def get_leg_just_ro_content(url):
   response = requests.get(url)
@@ -18,12 +19,10 @@ def get_leg_just_ro_content(url):
   law = ""
   for index in range(len(article_titles)):
     law += article_titles[index].text_content() + "\n" + article_contents[index].text_content().replace("...", "") + "\n"
-  match = re.search(r'(\w+)\s+nr\.\s+(\d+)\s+din.*(\d{4})', law_title[0].text_content())
-  if match:
-    tip_act = match.group(1)
-    nr_act = match.group(2)
-    an_act = match.group(3)
 
+  tip_act, nr_act, an_act = parse_law_title.parse_law_title(law_title[0].text_content())
+  
+  if tip_act is not None:
     file_name = f"{tip_act}_{nr_act}_{an_act}.txt"
     folder = "../reference_docs"
     if not os.path.exists(folder):
@@ -32,4 +31,4 @@ def get_leg_just_ro_content(url):
     file_saving_location = os.path.join(folder, file_name)
     with open(file_saving_location, "w") as file:
       file.write(law)
-    file.close()
+    file.close()    
