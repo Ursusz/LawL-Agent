@@ -1,11 +1,15 @@
 import re
 import stanza
+import logging
+
+logging.getLogger("stanza").setLevel(logging.WARNING)
 
 # stanza.download("ro")
 
 nlp = stanza.Pipeline("ro", processors="tokenize,pos,lemma")
 
 def lemmatize(text):
+  text = text.lower()
   doc = nlp(text)
   lemmatized_law = ''
   for sent in doc.sentences:
@@ -18,14 +22,14 @@ def lemmatize(text):
 
 def parse_law_title(law_title):
   lemmatized_law = lemmatize(law_title)
+  #LEGE_NR._360/2023_
   match = re.search(r'([A-Z]+)_NR\._(\d+)/(\d{4})', lemmatized_law)
   if match:
-    tip_act = match.group(1)
-    nr_act = match.group(2)
-    an_act = match.group(3)
+    return match.group(1), match.group(2), match.group(3)
 
-    return tip_act, nr_act, an_act
+  #LEGE_NR._360_DIN_2023_
+  match = re.search(r'([A-Z]+)_NR\._(\d+)_DIN_.*?(\d{4})', lemmatized_law)
+  if match:
+      return match.group(1), match.group(2), match.group(3)
   
   return None, None, None
-
-print(parse_law_title('legii nr. 360/2023'))

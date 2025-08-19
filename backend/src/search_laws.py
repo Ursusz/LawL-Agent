@@ -18,7 +18,7 @@ def find_local_reference(law_ref):
     # return None
     if os.path.isdir(REFERENCE_DOCS_DIR):
         for file in os.listdir(REFERENCE_DOCS_DIR):
-            if file == 'LEGE_360_2023.txt':
+            if file == f'{law_ref}.txt':
                 fpath = os.path.join(REFERENCE_DOCS_DIR, file)
 
                 if os.path.isfile(fpath):
@@ -40,10 +40,11 @@ def extract_text_txt(filepath):
         return 'The text of the law was not found.'
     text = ''
     with open(filepath, 'r') as f:
-        text = f.read()
+        text = f.read() or ''
     return text
 
-def fetch_law_online(law_ref):
+def fetch_online_reference(law_ref):
+    # brave_search_api -> ia primul site cel mai relevant (+ de incredere), apoi un web scraper extrage continutul si il salveaza intr-un fisier cu numele {referinta_standardizata}
     print("Web scraping")
     brave_search_api.search_law_online(law_ref)
     filepath = find_local_reference(law_ref)
@@ -60,17 +61,27 @@ def find_laws(references, document_text):
     laws = {}
     for ref in references:
         tip_act, nr_act, an_act = parse_law_title.parse_law_title(ref)
+        law_reference_standard = f'{tip_act}_{nr_act}_{an_act}'
+        law_text = ''
+        # momentan, tip_act poate fi None din cauza patternului regex, poate referinta nu respecta patternul
         if tip_act is not None:
             if os.path.isdir(REFERENCE_DOCS_DIR):
+                # iterez prin fisierele din reference_docs, daca gasesc un fisier cu acelasi nume ca referinta, fetch-uiesc local
                 for file in os.listdir(REFERENCE_DOCS_DIR):
-                    if file == f'{tip_act}_{nr_act}_{an_act}.txt':
+                    if file == f'{law_reference_standard}.txt':
                         fpath = os.path.join(REFERENCE_DOCS_DIR, file)
                         if os.path.isfile(fpath):
-                          law_text = fetch_local_reference(ref)
-        else: law_text = fetch_law_online(ref)
+                          law_text = fetch_local_reference(law_reference_standard)
+                          break
+                # altfel aplic logica de web scraping
+                if law_text is None:
+                    law_text = fetch_online_reference(law_reference_standard)
         if law_text:
             relevant_article = bm25.get_most_relevant_fragment(law_text=law_text, context=document_text)
             gemini_information = gemini_summary.get_gemini_informations_about_law(law_text, relevant_article)
+            # gemini_information[0] -> sumar lege intreaga
+            # gemini_information[1] -> lege intreaga simplificata
+            # gemini_information[2] -> sumar articol relevant
             laws[ref] = {
                 "law": law_text,
                 "law_summary": gemini_information[0],
