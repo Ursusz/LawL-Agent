@@ -26,7 +26,7 @@ def get_law_text_simplified(text):
 def get_gemini_informations_about_law(law_text, relevant_article):
     SUMMARY_PROMPT = "Sumarizeaza, pastrand intreaga esenta si informatie a textului, fara emoticoane, fara stiluri de font(bold, italic), fara '*' sau alte caractere similare:"
     SIMPLIFY_PROMPT = "Rescrie aceasta lege, sa fie usor de inteles pentru oricine, fara emoticoane, fara stiluri de font(bold, italic), fara explicatii extra, fara text introductiv:"
-    BREAKUP_PROMPT = "Iti voi da 3 task-uri despartite prin 'question', raspunsurile aferente fiecarui task trebuie despartite de tine prin response. Tokenul 'response' va fi pus DUPA fiecare raspuns, nu inainte"
+    BREAKUP_PROMPT = "Iti voi da 3 task-uri despartite prin 'question', raspunsurile aferente fiecarui task trebuie despartite de tine prin 'response'. Tokenul 'response' va fi pus DUPA fiecare raspuns, nu inainte"
     first_task = " question " + SUMMARY_PROMPT + law_text
     second_task = " question " + SIMPLIFY_PROMPT + law_text
     third_task = " question  " + SUMMARY_PROMPT + relevant_article
