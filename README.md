@@ -13,6 +13,8 @@
 
 ### 1. Configure Backend
 
+### Atentie! backend/src/utilities -> parse_law_title.py. Prima oara cand este rulat codul trebuie sters comentariul de la linia cu stanza.download("ro") apoi comentat inapoi.
+
 #### Google Gemini API KEY -> https://aistudio.google.com/app/apikey
 
 #### Brave Search API KEY -> https://brave.com/search/api/
