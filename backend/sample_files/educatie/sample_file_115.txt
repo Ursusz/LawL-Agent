@@ -1,0 +1,120 @@
+Fișă medicală poliție
+
+	
+	
+	
+
+		
+		Date de identificare a persoanei:Nume complet: ________________________
+
+CNP: ________________________
+
+Data nașterii: ________________________
+
+Locul nașterii: ________________________
+
+Adresa de domiciliu: ________________________
+
+Telefon: ________________________
+
+Stare civilă: ________________________
+
+Naționalitate: ________________________Informații medicale generale:Grupa sanguină: ________________________
+
+Rhesus: ________________________
+
+Alergii cunoscute: ________________________
+
+Medic de familie: ________________________
+
+Telefon medic familie: ________________________
+
+Istoric medical personal:Boala cronică (diabet, hipertensiune, etc.): ________________________
+
+Intervenții chirurgicale anterioare: ________________________
+
+Istoric de spitalizări recente: ________________________
+
+Transfuzii de sânge: ________________________
+
+Alte afecțiuni notabile: ________________________Antecedente familiale relevante:Istoricul de boli în familie:Afecțiuni cardiovasculare: ________________________
+
+Cancer: ________________________
+
+Afecțiuni neurologice: ________________________
+
+Depresie/ tulburări psihice: ________________________
+
+Alte afecțiuni: ________________________Examinare clinică:Tensiune arterială: ________________________ mmHg
+
+Puls: ________________________ bătăi/minut
+
+Temperatura corporală: ________________________ °C
+
+Greutate: ________________________ kg
+
+Înălțime: ________________________ cm
+
+IMC (Indicele de masă corporală): ________________________Statusul fizic:Cap:Aspect general: ________________________
+
+Prezența leziunilor (dacă este cazul): ________________________
+
+Gât:Mobilitate: ________________________
+
+Prezența umflăturilor/ afecțiunilor: ________________________
+
+Torace:Respirație: ________________________
+
+Prezența zgomotelor anormale: ________________________
+
+Abdomen:Palpare: ________________________
+
+Simptome (durere, tensiune): ________________________
+
+Membre:Mobilitate: ________________________
+
+Prezența edemelor, umflăturilor: ________________________
+
+Coloana vertebrală:Durere sau rigiditate: ________________________Status psihic:Nivel de conștiență: ________________________
+
+Claritate mentală: ________________________
+
+Comportament și reacții:Calm și cooperant: ________________________
+
+Agitație sau agresivitate: ________________________
+
+Tulburări de comportament/ cognitive (dacă este cazul):Halucinații: ________________________
+
+Disartrie (vorbire neclară): ________________________
+
+Alte semne de afectare psihică: ________________________Investigații suplimentare (dacă este cazul):Analize de sânge:Hemoglobină: ________________________
+
+Leucocite: ________________________
+
+Trombocite: ________________________
+
+Glucoză: ________________________
+
+Creatinină: ________________________
+
+ALT/AST: ________________________
+
+Electroliți: ________________________
+
+Electrocardiogramă (ECG): ________________________
+
+Radiografie toracică: ________________________
+
+Ecografie abdominală: ________________________Diagnostice provizorii:Tratament recomandat:Medicamente prescrise:
+
+Recomandări pentru îngrijire:
+
+Referire la specialist (dacă este cazul):
+
+Recomandări pentru prevenție:Semnătura medicului:Nume: ________________________
+
+Specialitate: ________________________
+
+Data: ________________________
+
+Semnătura: ________________________Observații suplimentare (dacă este cazul):Notă: Această fișă medicală este completată în scopul evaluării stării de sănătate în cadrul procedurilor polițienești, fiind confidențială și tratată conform legislației în vigoare.

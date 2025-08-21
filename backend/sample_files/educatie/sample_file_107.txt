@@ -1,0 +1,140 @@
+Fișă medicală adulți
+
+	
+	
+	
+
+		
+		Date de Identificare:Nume complet: ________________________
+
+Data nașterii: ________________________
+
+Sex: ________________________
+
+CNP: ________________________
+
+Adresă: ________________________
+
+Număr de telefon: ________________________
+
+Email: ________________________
+
+Stare civilă: ________________________
+
+Locul de muncă: ________________________
+
+Profesie: ________________________
+
+Nr. de asigurare de sănătate: ________________________Istoricul medical al pacientului:Boli cronice preexistente:
+
+Intervenții chirurgicale anterioare:
+
+Alergii cunoscute:Medicamente: ________________________
+
+Alimente: ________________________
+
+Alte alergii: ________________________
+
+Istoricul familial de boli:Boli cardiovasculare: ________________________
+
+Diabet: ________________________
+
+Cancer: ________________________
+
+Boli neurologice: ________________________
+
+Alte afecțiuni importante: ________________________
+
+Istoricul de vaccinări:
+
+Obiceiuri și stil de viață:Fumat: [Da/Nu] – Dacă da, câte țigarete pe zi: ___________
+
+Consum de alcool: [Da/Nu] – Dacă da, frecvența: ___________
+
+Exerciții fizice: [Da/Nu] – Dacă da, frecvența: ___________
+
+Dietă: [Normală/Vegetariană/Vegană/etc.] – Detalii: ___________Examinarea fizică:Semne vitale:Tensiune arterială: ________________________
+
+Frecvența cardiacă: ________________________
+
+Temperatura corpului: ________________________
+
+Frecvența respiratorie: ________________________
+
+Saturația oxigenului: ________________________
+
+Greutate: ________________________
+
+Înălțime: ________________________
+
+Examinare generală:Aspect general: [Normal/Modificat]
+
+Nivel de conștiență: [Vigilent/Confuz/Comatos]
+
+Ghid de palpare: [Normal/Anormal]
+
+Examinarea sistemului cardiovascular:Ritm cardiac: ________________________
+
+Murmur cardiac: [Prezent/Absență]
+
+Puls: ________________________
+
+Presiune arterială: ________________________
+
+Examinarea sistemului respirator:Tipul respirației: ________________________
+
+Expirație: ________________________
+
+Răspuns la manevrele de respirație: ________________________
+
+Examinarea sistemului digestiv:Abdomen: [Normal/Distens]
+
+Palpare: [Durere/Normala]
+
+Bătăi intestinale: ________________________
+
+Hidratare: ________________________
+
+Examinarea sistemului musculo-scheletic:Mobilitatea articulațiilor: ________________________
+
+Durere la palpare: ________________________
+
+Forță musculară: ________________________Investigații paraclinice:Analize de laborator:Hemoleucograma: ________________________
+
+Biochimie: ________________________
+
+Glicemie: ________________________
+
+Funcția hepatică: ________________________
+
+Funcția renală: ________________________
+
+Electroliți: ________________________
+
+Investigații imagistice:Ecografie abdominală: [Da/Nu]
+
+Radiografie toracică: [Da/Nu]
+
+ECG: [Da/Nu]
+
+RMN/CT: [Da/Nu]
+
+Teste funcționale:Test de efort: [Da/Nu]
+
+Spirometrie: [Da/Nu]Diagnosticul medical:Diagnosticul principal: ________________________
+
+Diagnostice secundare (dacă sunt):Tratament și recomandări:Tratament medicamentos:Medicamente curente:
+
+Tratament chirurgical (dacă este cazul):
+
+Recomandări pentru stilul de viață:Dietă: ________________________
+
+Exerciții fizice: ________________________
+
+Renunțarea la obiceiuri nesănătoase: ________________________
+
+Plan de urmărire medicală:Consultații periodice: ________________________
+
+Reevaluare laborator: ________________________
+
+Alte recomandări: ________________________Semnătura medicului:Data: ________________________Semnătura pacientului:

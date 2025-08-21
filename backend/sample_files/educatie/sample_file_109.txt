@@ -1,0 +1,122 @@
+Fișă medicală copii
+
+	
+	
+	
+
+		
+		Date de identificare:Nume complet: ________________________
+
+Data naşterii: ________________________
+
+Sex: ________________________
+
+CNP: ________________________
+
+Adresă: ________________________
+
+Număr telefon contact: ________________________
+
+E-mail: ________________________Date despre părinți/reprezentanți legali:Nume tată: ________________________
+
+Nume mamă: ________________________
+
+Adresă completă (dacă este diferită de cea a copilului): ________________________
+
+Număr de telefon contact (părinte/reprezentant legal): ________________________
+
+Locul de muncă (părinte/reprezentant legal): ________________________Istoricul medical general:Alergii: ____________________________________________
+
+Bolile cronice: ________________________________________
+
+Vaccinări:Vaccinarea este conform schemei naționale de vaccinare?Da
+
+Nu
+
+Detalii suplimentare despre vaccinuri administrate: ________________________
+
+Răspunsuri adverse la vaccinuri anterioare: ________________________Istoricul naşterii:Tipul naşterii:Naştere naturală
+
+Naştere prin cezariană
+
+Greutatea la naştere: ________________________
+
+Înălţimea la naştere: ________________________
+
+Vârsta de gestaţie la naştere: ________________________
+
+Complicaţii în timpul sarcinii: ________________________
+
+Complicaţii la naştere: ________________________Dezvoltare psihomotorie:Dezvoltare motorie (scor al dezvoltării motorii în funcţie de vârsta copilului):La vârsta de __ luni (de exemplu, 12 luni), copilul a realizat:Ține capul singur
+
+Se rostogolește
+
+Se ridică în picioare
+
+Merge fără ajutor
+
+Folosește cuvinte simpleIstoricul spitalizărilor:Spitalizări anterioare:Da [ ] / Nu [ ]
+
+Detalii despre spitalizări anterioare: ________________________
+
+Intervenții chirurgicale anterioare:Da [ ] / Nu [ ]
+
+Detalii despre intervențiile chirurgicale: ________________________Istoricul bolilor:Boala de fond/afecțiuni cronice:Detalii: ________________________
+
+Infecții virale/ bacteriene anterioare:Detalii: ________________________
+
+Boli respiratorii (ex: astm, bronșită):Detalii: ________________________
+
+Afecțiuni digestive (ex: gastrite, colite):Detalii: ________________________
+
+Afecțiuni de piele (ex: dermatite, eczeme):Detalii: ________________________Istoricul familial:Afecțiuni relevante în familie:Diabet
+
+Hipertensiune arterială
+
+Boli cardiovasculare
+
+Boli autoimune
+
+Cancer
+
+Afecțiuni neurologice (ex: epilepsie, tulburări de învățare)
+
+Detalii suplimentare: ________________________Evaluare nutrițională:Alimentație:Alăptare exclusivă până la vârsta de 6 luni
+
+Diversificare începută la vârsta de __ luni
+
+Tipuri de alimente consumateMâncare solidă: ________________________
+
+Suplimente (vitamine, minerale): ________________________
+
+Probleme legate de alimentație: ________________________Activitate fizică:Activități sportive:Da [ ] / Nu [ ]
+
+Detalii activități: ________________________
+
+Recomandări specifice pentru activitate fizică: ________________________Consulturi medicale:Ultimul consult medical: ________________________
+
+Medicul curant: ________________________
+
+Recomandări specifice: ________________________Examinări de laborator:Examinări realizate:Hemoleucogramă: ________________________
+
+Teste hepatice: ________________________
+
+Teste renale: ________________________
+
+Alte analize: ________________________Evaluare psihologică:Evaluare comportamentală:Nivel de socializare: ________________________
+
+Abilități de comunicare: ________________________
+
+Activități cognitive: ________________________
+
+Întârziere în dezvoltarea cognitivă:Da [ ] / Nu [ ]
+
+Detalii: ________________________Recomandări medicale:Recomandări generale: ________________________
+
+Tratament medicamentos curent (dacă este cazul):Denumire medicament: ________________________
+
+Dozaj: ________________________
+
+Durată tratament: ________________________
+
+Următorul control medical: ________________________

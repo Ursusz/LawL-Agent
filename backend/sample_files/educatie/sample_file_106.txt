@@ -1,0 +1,70 @@
+Fișă medicală
+
+	
+	
+	
+
+		
+		Date de identificare:Nume pacient: ________________________
+
+Data nașterii: ________________________
+
+Sex: ________________________
+
+Adresă: ________________________
+
+Număr telefon: ________________________
+
+CNP: ________________________
+
+Data înregistrării: ________________________
+
+Număr dosar medical: ________________________Istoricul medical:Antecedente personale patologice: Pacientul prezintă un istoric medical relevant de [descrierea afecțiunilor anterioare], incluzând afecțiuni cardiovasculare, diabet, afecțiuni respiratorii, boli infecțioase sau orice alte condiții relevante pentru tratament. La momentul actual, istoricul patologic general al pacientului include [detalii suplimentare].
+
+Antecedente familiale: Se cunoaște că pacientul provine dintr-o familie cu risc de [detalii privind bolile ereditare sau condițiile medicale relevante]. Membru al familiei [detalii despre rude, dacă este cazul], având istoricul de [detalii].Starea de sănătate actuală:Plângeri principale: Pacientul se prezintă cu [descriere detaliată a simptomelor curente], ce includ dureri [descriere tip și localizare], amețeli, oboseală, pierdere în greutate sau orice alte simptome asociate.
+
+Stare generală: Pacientul se află într-o stare generală [bună/moderată/satisfăcătoare], dar prezintă [alte observații despre starea fizică, nivelul de energie, reacțiile la stimuli sau alte simptome fizice]. Se indică monitorizarea constantă a stării de sănătate.
+
+Examinarea clinică: La examinarea fizică, s-au observat următoarele:Tensiunea arterială: [valoare]
+
+Temperatura corporală: [valoare]
+
+Pulsații: [valoare]
+
+Respirație: [valori relevante, tip de respirație, frecvență]
+
+Examenul toracic: [detalii, dacă este cazul]
+
+Examenul abdominal: [detalii]
+
+Examenul neurologic: [detalii]
+
+Examenul dermatologic: [detalii, dacă sunt relevante]
+
+Examenul otolaringologic: [detalii, dacă sunt relevante]Investigații suplimentare:Analize de laborator: S-au realizat următoarele analize:Hemoleucograma: [rezultate]
+
+Profilul lipidic: [rezultate]
+
+Teste hepatice: [rezultate]
+
+Teste renale: [rezultate]
+
+[Alte analize relevante]
+
+Ecografie abdominală: [rezultate]
+
+Radiografie toracică: [rezultate]
+
+Electrocardiogramă: [rezultate]
+
+Alte investigații imagistice: [detalii]Diagnostic:Pe baza evaluării clinice și a investigațiilor de laborator, diagnosticul principal este [diagnosticul principal]. Se suspectează [alte condiții sau afecțiuni asociate]. Diagnosticul final va fi stabilit pe baza evoluției stării pacientului și a rezultatelor suplimentare.Tratament:Medicație curentă: Pacientul urmează tratamente pentru [detalii privind medicamentele, doze, durată, scopuri terapeutice]. Medicamentele administrate includ [detalii].
+
+Intervenții chirurgicale: [Dacă este cazul] Pacientul a fost supus unei intervenții chirurgicale pentru [tipul intervenției], iar starea post-operatorie este [detalii relevante].
+
+Recomandări terapeutice: Se recomandă [recomandări privind regimul alimentar, fizioterapia, activitatea fizică, schimbări de stil de viață, etc.]. Este necesar un control periodic la [detalii despre specialiști, intervale de timp].Prognostic:Prognosticul pe termen scurt al pacientului este [evaluare a stării de sănătate pe termen scurt]. Prognosticul pe termen lung depinde de [factori precum răspunsul la tratament, comorbiditățile existente, etc.]. Se estimează că [detalii despre planul de tratament pe termen lung].Plan de urmărire:Următoarele controale sunt programate pentru [data, frecvență], iar pacientul va fi evaluat pentru [tipuri de teste, analize, examinări] pentru a monitoriza progresul tratamentului și a ajusta terapia în funcție de evoluția stării de sănătate.Semnătura medicului curant:Nume medic: ________________________
+
+Specialitate: ________________________
+
+Data: ________________________
+
+Semnătura: ________________________Aceste informații sunt confidențiale și vor fi tratate conform reglementărilor legale în vigoare privind protecția datelor personale și confidențialitatea informațiilor medicale.

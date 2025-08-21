@@ -1,0 +1,172 @@
+Fișă medicală sintetică pentru copii cu dizabilități
+
+	
+	
+	
+
+		
+		Datele pacientuluiNume: ________________________
+
+Prenume: ________________________
+
+Vârsta: ________________________
+
+Data nașterii: ________________________
+
+Sex: ________________________
+
+CNP: ________________________
+
+Adresa: ________________________
+
+Telefon de contact: ________________________Datele părinților / tutorelui legalNume părintele/tutorelui: ________________________
+
+Telefon: ________________________
+
+Adresa: ________________________
+
+Ocupația: ________________________
+
+Persoana de contact în caz de urgență: ________________________ISTORIC MEDICALNaștere și dezvoltareTipul nașterii: [ ] Naștere naturală [ ] Cezariana
+
+Greutatea la naștere: ________________________
+
+Vârsta gestațională: ________________________
+
+Complicații la naștere: ________________________
+
+Reacții adverse postnatale: ________________________
+
+Istoricul medical al copiluluiDiagnostice anterioare:
+
+Boala de bază / Dizabilitatea principală:Dizabilitate fizică: _______________________________
+
+Dizabilitate senzorială: ___________________________
+
+Dizabilitate cognitivă: ____________________________
+
+Dizabilitate neuropsihiatrică: _______________________
+
+Altele (specificați): _______________________________
+
+Vârsta diagnosticării: ________________________
+
+Metode de tratament utilizate până în prezent:Medicamente: ________________________
+
+Fizioterapie: ________________________
+
+Logopedie: ________________________
+
+Terapie ocupațională: ________________________
+
+Psihoterapie: ________________________
+
+Alte tratamente: ________________________
+
+Istoricul familialIstoricul de boli ereditare:
+
+Istoricul de dizabilități în familie:EVALUARE MEDICALĂ ACTUALĂStare generalăGreutate: ________________________
+
+Înălțime: ________________________
+
+Indice de masă corporală (IMC): ________________________
+
+Temperatura corporală: ________________________
+
+Ritm cardiac: ________________________
+
+Tensiune arterială: ________________________
+
+Evaluarea dizabilitățiiDizabilitate fizică:Tipul dizabilității (ex: paralizie cerebrală, deficiență motorie)
+
+Gradul de afectare: [ ] Ușor [ ] Moderat [ ] Sever
+
+Funcționalitatea: [ ] Independență totală [ ] Parțială [ ] Dependenta completă
+
+Recomandări și intervenții: ________________________
+
+Dizabilitate senzorială:Tipul dizabilității: [ ] Deficiență auditivă [ ] Deficiență vizuală
+
+Gradul de afectare: [ ] Ușor [ ] Moderat [ ] Sever
+
+Intervenții: ________________________
+
+Dizabilitate cognitivă:Tipul dizabilității (ex: retard mental, autism, sindrom Down): ________________________
+
+Gradul de afectare: [ ] Ușor [ ] Moderat [ ] Sever
+
+Evaluare psihologică: ________________________
+
+Recomandări educaționale: ________________________
+
+Dizabilitate neuropsihiatrică:Tipul dizabilității (ex: ADHD, tulburare de anxietate, tulburare de spectru autist): ________________________
+
+Gradul de afectare: [ ] Ușor [ ] Moderat [ ] Sever
+
+Intervenții terapeutice recomandate: ________________________
+
+Evaluarea stării psihologiceStare emoțională: [ ] Stabilă [ ] Anxios [ ] Depresiv [ ] Altele: ________________________
+
+Comportamente observate: ________________________
+
+Recomandări psihologice: ________________________
+
+Evaluarea abilităților de comunicareLimba vorbită: ________________________
+
+Abilități de vorbire: [ ] Normal [ ] Deficitar [ ] Non-verbal
+
+Necesită ajutor pentru comunicare: [ ] Da [ ] Nu
+
+Recomandări logopedice: ________________________EXAMEN FIZICSistemul respiratorAspecte observate: ________________________
+
+Auscultație pulmonară: ________________________
+
+Funcționalitate respiratorie: [ ] Normală [ ] Deficitară
+
+Sistemul cardiovascularRitm cardiac: ________________________
+
+Tensiune arterială: ________________________
+
+Puls periferic: ________________________
+
+Absența sau prezența semnelor de insuficiență cardiacă: ________________________
+
+Sistemul musculo-scheletalPostura: ________________________
+
+Abilități motrice (coordonare, echilibru): ________________________
+
+Mobilitate: [ ] Normală [ ] Limitată [ ] Sever afectată
+
+Sistemul neurologicReflexe: ________________________
+
+Motricitate fină și grosieră: ________________________
+
+Semne neurologice pozitive: ________________________
+
+Sistemul gastro-intestinalApetit: ________________________
+
+Digestie: [ ] Normală [ ] Probleme digestive: ________________________
+
+Sistemul urinarMicțiuni: [ ] Normale [ ] Dificultăți: ________________________INTERVENȚII RECOMANDATEMedicație curentă:
+
+Terapia fizică:Tipul: ________________________
+
+Frecvența: ________________________
+
+Terapie ocupațională:Tipul: ________________________
+
+Frecvența: ________________________
+
+Logopedie:Tipul: ________________________
+
+Frecvența: ________________________
+
+Evaluare psihologică continuă:Tipul: ________________________
+
+Frecvența: ________________________
+
+Alte intervenții:PROGRAM DE URMĂRIRE ȘI CONTROLData următoarei consultații: ________________________
+
+Specialist recomandat pentru control: ________________________
+
+Observații suplimentare: ________________________Semnătura medicului curant:Data: ________________________

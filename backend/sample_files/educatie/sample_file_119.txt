@@ -1,0 +1,76 @@
+Fișă școlarizare auto
+
+	
+	
+	
+
+		
+		Datele de identificare ale candidatului:Nume complet: ________________________
+
+Adresă completă: ________________________
+
+Telefon: ________________________
+
+Email: ________________________
+
+Data nașterii: ________________________
+
+Locul nașterii: ________________________
+
+Seria și nr. actului de identitate: ________________________
+
+CNP: ________________________Informații despre școala de șoferi:Denumirea școlii de șoferi: ________________________
+
+Adresă școală de șoferi: ________________________
+
+Telefon școală de șoferi: ________________________
+
+Instructor auto: ________________________
+
+Categorie permis dorită: ________________________Istoricul școlarizării:Data începerii cursurilor: ________________________
+
+Data încheierii cursurilor: ________________________
+
+Numărul de lecții teoretice susținute: ________________________
+
+Numărul de lecții practice susținute: ________________________
+
+Tipul lecțiilor practice (începătoare, intermediare, avansate): ________________________
+
+Sesiuni de pregătire suplimentară (dacă este cazul): ________________________Cursuri teoretice:Cursurile teoretice se desfășoară conform unui program stabilit de către instructorul desemnat și includ următoarele module:Legislație rutieră: Reguli de circulație, semne de circulație, sancțiuni pentru nerespectarea legislației.
+
+Sisteme de siguranță rutieră: Tehnici de prevenire a accidentelor, utilizarea corectă a echipamentului de siguranță.
+
+Mecanica vehiculului: Cunoștințe fundamentale despre vehicul, piese, funcționarea acestuia.
+
+Ecologia și protecția mediului: Impactul poluării generate de trafic, măsuri pentru protecția mediului.
+
+Comportamente la volan: Gestionarea stresului în trafic, respectarea regulamentelor, comportamentul în condiții de vreme nefavorabilă.
+
+Prim ajutor rutier: Măsuri de prim ajutor în caz de accident rutier, proceduri standard pentru acordarea ajutorului în caz de accident.
+
+Pedepse legale pentru infracțiuni rutiere: Cazuri de infracțiuni grave la volan, sancțiuni, proceduri legale.Evaluare teoretică:Data examenului teoretic: ________________________
+
+Rezultatul examenului teoretic: ________________________
+
+Numărul de încercări pentru examenul teoretic: ________________________Cursuri practice:Lecțiile practice sunt realizate pe parcursul unui număr de ore stabilit de școala de șoferi. Acestea se concentrează pe:Manipularea vehiculului: Cunoașterea comenzilor mașinii, reglajul scaunului, oglinzilor, și utilizarea corectă a volanului.
+
+Tehnici de conducere în trafic: Abilități de conducere în condiții de trafic intens, integrarea în fluxul de trafic.
+
+Parcarea: Tehnici de parcare pe diferite tipuri de locuri de parcare, parcarea laterală, înapoierea, manevre de urgență.
+
+Conducerea în condiții meteorologice extreme: Abilități de conducere în condiții de vreme nefavorabilă (ploaie, zăpadă, ceață).
+
+Reguli de comportament pe drumurile publice: Comportament în intersecții, la treceri de pietoni, în situații de urgență.
+
+Evaluare continuă: Instructorul va monitoriza progresul, iar lecțiile vor fi ajustate în funcție de nevoile și performanțele elevului.Evaluare practică:Data examenului practic: ________________________
+
+Rezultatul examenului practic: ________________________
+
+Numărul de încercări pentru examenul practic: ________________________Detalii suplimentare:Starea fizică și mentală: ________________________
+
+Restricții medicale (dacă este cazul): ________________________
+
+Permis de conducere emis: ________________________
+
+Număr permis: ________________________Semnătura candidatului: ________________________Semnătura instructorului auto: ________________________Observații: ________________________Această fișă de școlarizare auto oferă un cadru detaliat și profesional pentru înregistrarea evoluției și pregătirii candidatului în vederea obținerii permisului de conducere. Datele vor fi completate cu informațiile exacte și relevante pentru fiecare cursant în parte.

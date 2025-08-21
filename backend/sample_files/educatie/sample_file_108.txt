@@ -1,0 +1,112 @@
+Fișa medicală anp
+
+	
+	
+	
+
+		
+		Date de identificare:Nume pacient: ________________________
+
+Prenume pacient: ________________________
+
+Cod Numeric Personal (CNP): ________________________
+
+Data nașterii: ________________________
+
+Sex: ________________________
+
+Naționalitate: ________________________
+
+Stare civilă: ________________________
+
+Adresa: ________________________
+
+Telefon de contact: ________________________
+
+Meserie: ________________________
+
+Loc de muncă: ________________________Date medicale:Data internării: ________________________
+
+Data externării: ________________________
+
+Numărul de internare: ________________________
+
+Motivul internării: ________________________
+
+Istoricul medical personal:Afecțiuni preexistente: ________________________
+
+Intervenții chirurgicale anterioare: ________________________
+
+Alergii cunoscute: ________________________
+
+Medicamente curente: ________________________
+
+Antecedente familiare: ________________________Istoricul familial:Bolile moștenite în familie: ________________________
+
+Afecțiuni genetice ale rudelor: ________________________Evaluarea stării de sănătate la momentul internării:Semne vitale:Temperatura corporală: ________________________
+
+Tensiunea arterială: ________________________
+
+Frecvența cardiacă: ________________________
+
+Frecvența respiratorie: ________________________
+
+Saturația în oxigen: ________________________
+
+Status fizic:Greutate: ________________________
+
+Înălțime: ________________________
+
+Indicele de masă corporală (IMC): ________________________
+
+Perimetru abdominal: ________________________
+
+Analize de laborator la internare:Hemoleucograma: ________________________
+
+Glucoza serică: ________________________
+
+Colesterol total: ________________________
+
+Trigliceride: ________________________
+
+Electroliți: ________________________Diagnostic clinic:Diagnostic principal: ________________________
+
+Diagnostice secundare: ________________________
+
+Comorbidități: ________________________Tratament instituționalizat la internare:Tratament medicamentos:Medicamente prescrise: ________________________
+
+Doza și durata: ________________________
+
+Intervenții medicale: ________________________
+
+Monitorizare specială necesară: ________________________Examinări suplimentare:Investigații imagistice:Ecografie abdominală: ________________________
+
+Radiografie toracică: ________________________
+
+RMN: ________________________
+
+CT: ________________________
+
+Analize suplimentare de laborator:Analize biochimice: ________________________
+
+Cultura pentru germeni: ________________________
+
+Evaluări funcționale: ________________________Ecocardiografie: ________________________
+
+Electrocardiogramă (ECG): ________________________Evoluția pacientului în timpul internării:Ziua 1: ________________________
+
+Ziua 2: ________________________
+
+Ziua 3: ________________________
+
+Ziua 4: ________________________Starea generală a pacientului: ________________________Plan de tratament pentru externare:Tratament medicamentos recomandat la externare: ________________________
+
+Dietă și regim: ________________________
+
+Recomandări pentru monitorizare ulterioară: ________________________
+
+Medicație de întreținere: ________________________Recomandări pentru îngrijiri ulterioare:Control medical la 7 zile: ________________________
+
+Control medical la 30 zile: ________________________
+
+Teste și analize de urmărire: ________________________Semnătura medicului curant: ________________________Semnătura pacientului sau a însoțitorului: ________________________Observații suplimentare: ________________________Comentarii: ________________________

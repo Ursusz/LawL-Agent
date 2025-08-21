@@ -1,0 +1,76 @@
+Fișa vaccinare copii
+
+	
+	
+	
+
+		
+		FIȘA DE VACCINARE A COPILULUIDate personale ale copilului:Nume complet: ________________________
+
+Data nașterii: ________________________
+
+Sex: ________________________
+
+CNP (Codul Numeric Personal): ________________________
+
+Adresa: ________________________
+
+Telefon părinți/tutori: ________________________Istoricul medical al copilului:Afecțiuni cronice: ________________________
+
+Alergii: ________________________
+
+Intervenții chirurgicale anterioare: ________________________
+
+Istoric de reacții adverse la vaccinuri anterioare: ________________________
+
+Alte informații relevante pentru vaccinare: ________________________Vaccinurile administrate:Nr. Crt.Denumire vaccinData administrăriiSeria vaccinuluiLotul vaccinuluiLocația administrării (spital/clinică)Număr de lot1________________________________________________________________________________________________________________________________________________2________________________________________________________________________________________________________________________________________________3________________________________________________________________________________________________________________________________________________4________________________________________________________________________________________________________________________________________________5________________________________________________________________________________________________________________________________________________Planul de vaccinare conform calendarului național:Vaccinarea la naștere:BCG (Vaccinul împotriva tuberculozei)
+
+Hepatitis B (Hepatita B, prima doză)
+
+Vaccinările la 2 luni:DTPa (Vaccinul împotriva difteriei, tetanosului și tusei convulsive)
+
+VIP (Vaccinul polio inactivat)
+
+HIB (Vaccinul împotriva hemofiliei)
+
+Hepatitis B (A doua doză)
+
+Vaccinările la 4 luni:DTPa (a doua doză)
+
+VIP (a doua doză)
+
+HIB (a doua doză)
+
+Vaccinările la 6 luni:DTPa (a treia doză)
+
+VIP (a treia doză)
+
+HIB (a treia doză)
+
+Vaccinările la 1 an:ROR (Vaccinul împotriva rujeolei, oreionului și rubeolei)
+
+VHB (Hepatita B, a treia doză)
+
+Vaccinările la 5 ani:DTPa (rapel)
+
+VIP (rapel)
+
+ROR (rapel)
+
+Vaccinările la 12-14 ani:HPV (Vaccinul împotriva papilomavirusului uman)
+
+DT (Vaccinul împotriva difteriei și tetanosului, rapel)Reacții adverse raportate:Reacții locale: Durere sau umflătura la locul injectării
+
+Reacții sistemice: Febră, oboseală, dureri musculare
+
+Altele: Reacții alergice ușoare (erupții cutanate, prurit), însă fără reacții severeMenționăm că toate reacțiile adverse trebuie raportate medicului de familie sau specialistului care a administrat vaccinul.Semnătura părinților/tutorilor:Prin semnătura de mai jos, se confirmă că informațiile furnizate sunt corecte și complete. De asemenea, se confirmă că părintele/tutorele a fost informat asupra vaccinurilor administrate și a posibilelor reacții adverse.Nume părinte/tutore: ________________________
+
+Semnătura: ________________________
+
+Data: ________________________Semnătura medicului:Nume medic: ________________________
+
+Specialitatea: ________________________
+
+Semnătura medicului: ________________________
+
+Data: ________________________Observații suplimentare:Acesta este un exemplu de fișă de vaccinare a copilului, care poate fi utilizată de către personalul medical pentru a documenta vaccinurile administrate și a urmări istoricul imunizărilor copilului.

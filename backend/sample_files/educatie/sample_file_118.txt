@@ -1,0 +1,180 @@
+Fișă pacient stomatologie
+
+	
+	
+	
+
+		
+		Date personale:Nume complet: ________________________
+
+Data nașterii: ________________________
+
+Sex: ________________________
+
+Stare civilă: ________________________
+
+Adresă: ________________________
+
+Telefon: ________________________
+
+E-mail: ________________________
+
+CNP: ________________________
+
+Profesie: ________________________
+
+Motivul prezentării: ________________________Istoricul medical general:Afecțiuni cronice:Hipertensiune arterială
+
+Diabet zaharat
+
+Alergii (specifice)
+
+Boli cardiovasculare
+
+Probleme respiratorii
+
+Alte afecțiuni (detaliati): ________________
+
+Intervenții chirurgicale anterioare:Chirurgie dentară (ex: extracții, implanturi)
+
+Chirurgie generală (ex: apendicectomie, colecistectomie)
+
+Alte intervenții (detaliati): ________________
+
+Medicație curentă:Medicamente pentru hipertensiune: ________________
+
+Medicamente pentru diabet: ________________
+
+Alte medicamente: ________________
+
+Istoricul alergiilor:Medicamente (detaliati): ________________
+
+Alimente (detaliati): ________________
+
+Alte alergii (detaliati): ________________
+
+Istoricul familial:Boli dentare (ex: carii, boala parodontală)
+
+Afecțiuni cardiovasculare
+
+Alte boli ereditare: ________________Istoricul stomatologic:Probleme dentare anterioare:Carie dentară
+
+Inflamație gingivală (gingivită/parodontită)
+
+Pulpită
+
+Abces dentar
+
+Boala parodontală
+
+Sensibilitate dentară
+
+Măsele de minte (probleme sau extracții)
+
+Alte probleme dentare: ________________
+
+Tratamente stomatologice anterioare:Tratament de canal (endodonție)
+
+Umpluturi dentare (tip material): ________________
+
+Coroane dentare
+
+Implanturi dentare
+
+Albire dentară
+
+Extracții dentare
+
+Altele (detaliati): ________________
+
+Tipul protezelor sau aparatelor dentare folosite anterior:Proteze mobile
+
+Proteze fixe
+
+Aparat dentar ortodontic
+
+Alte tipuri de proteze: ________________
+
+Probleme occlusale (mângâierea sau alinirea maxilarelor):Corectă
+
+Deviere ușoară
+
+Deviere severă
+
+Bruxism (scrâșnirea dinților)
+
+Alte observații: ________________Examenul clinic:Starea generală a cavității bucale:Igienă orală bună
+
+Igienă orală precară (gingivită, placă bacteriană)
+
+Prezența tartrului (da/nu)
+
+Semne de inflamație gingivală (da/nu)
+
+Mirosul neplăcut al respirației (halitoză)
+
+Alte observații: ________________
+
+Gingiile:Gingiile sunt roz, ferme și sănătoase
+
+Prezența sângerărilor la palpare
+
+Prezența pungilor parodontale (da/nu)
+
+Retragerea gingivală
+
+Alte observații: ________________
+
+Dinții:Cariile dentare: ____________________
+
+Sensibilitate dentară la rece/cald: ____________________
+
+Fracturi sau fisuri dentare: ____________________
+
+Estetica dentară (colorație, formă): ____________________
+
+Prezența plombelor sau a restaurărilor: ____________________
+
+Alte observații: ________________
+
+Articulația temporo-mandibulară (ATM):Fără durere sau disfuncție
+
+Durere sau dificultăți la mișcare
+
+Crepității sau clicuri în timpul deschiderii gurii
+
+Alte observații: ________________Investigații suplimentare recomandate:Radiografii dentare (panoramice, intraorale, etc.)
+
+Teste pentru boala parodontală (probă de mobilitate dentară, sondaj parodontal)
+
+Analize de sânge (pentru anumite afecțiuni sistemice)
+
+Teste pentru alergenii dentari (dacă este cazul)Planul de tratament propus:Obiective generale:Restabilirea sănătății dentare
+
+Prevenirea apariției de noi afecțiuni dentare
+
+Îmbunătățirea esteticii dentare și a funcției masticatorii
+
+Intervenții propuse:Tratament de canal
+
+Extractii dentare
+
+Umpluturi dentare (tip material: ________________)
+
+Coroane dentare
+
+Tratament parodontal (curățare, detartraj, etc.)
+
+Albire dentară
+
+Implanturi dentare
+
+Alte proceduri propuse: ________________
+
+Recomandări pentru igienă orală:Periaj de 2 ori pe zi
+
+Folosirea aței dentare zilnic
+
+Utilizarea unui rând de apă de gură antiseptică
+
+Vizite periodice la stomatolog (de 2 ori pe an)Semnătura pacientului: ________________________Semnătura medicului stomatolog: ________________________Data: ________________________Această fișă trebuie completată de fiecare dată când pacientul se prezintă pentru consultații sau tratamente stomatologice. Este important să se ofere informații complete și corecte pentru a asigura un diagnostic precis și un tratament adecvat.

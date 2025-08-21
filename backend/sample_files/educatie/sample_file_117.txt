@@ -1,0 +1,54 @@
+Fișă medicina muncii
+
+	
+	
+	
+
+		
+		Nume pacient: ________________________Data nașterii: ________________________CNP: ________________________Adresa: ________________________Telefon: ________________________Locul de muncă: ________________________Funcția ocupată: ________________________Sectia: ________________________Data completării fișei: ________________________I. INFORMAȚII GENERALEIstoric medical personal:Afecțiuni preexistente:(Se menționează afecțiunile medicale cronice sau acute, intervențiile chirurgicale, tratamentele în curs, etc.)
+
+Alergii cunoscute:(Se vor specifica alergiile alimentare, medicamentose sau de alt tip.)
+
+Istoric familial:(Se va completa cu informații relevante despre istoricul de sănătate al rudelor apropiate – afecțiuni cardiovasculare, respiratorii, oncologice, etc.)
+
+Antecedente profesionale:(Detalii legate de locurile de muncă anterioare, expunerea la riscuri profesionale, eventuale condiții de muncă specifice, etc.)
+
+Medic curant:Nume: ________________________Adresa: ________________________Telefon: ________________________II. EXAMEN MEDICAL GENERAL1. Semne vitale:Tensiunea arterială: ________________________
+
+Puls: ________________________
+
+Temperatura corporală: ________________________
+
+Frecvența respiratorie: ________________________
+
+Greutate: ________________________
+
+Înălțime: ________________________
+
+IMC (Indicele de Masă Corporală): ________________________2. Examinarea aparatului cardiovascular:Ritm cardiac: ________________________
+
+Auscultația: ________________________
+
+Evaluarea tensiunii arteriale: ________________________3. Examinarea aparatului respirator:Auscultație pulmonară: ________________________
+
+Capacitate vitală: ________________________
+
+Frecvența respiratorie: ________________________4. Examinarea aparatului locomotor:Mobilitatea generală: ________________________
+
+Durere articulară sau musculară: ________________________
+
+Limite de mișcare: ________________________5. Examinarea sistemului nervos:Reflexe: ________________________
+
+Coordonare și echilibru: ________________________
+
+Examinare psihologică (dacă este cazul): ________________________6. Examinarea pielii:Leziuni, erupții cutanate, sau alte afecțiuni dermatologice: ________________________III. EXAMEN MEDICAL SPECIALIZAT (DUPĂ CĂDEREA RISCURILOR SPECIFICE LOCULUI DE MUNCĂ)1. Examen oftalmologic:Acuitate vizuală: ________________________
+
+Examinare fund de ochi: ________________________
+
+Test de percepție a culorilor (dacă este necesar): ________________________
+
+Deficiențe vizuale: ________________________2. Examen ORL (urechi, nas, gât):Examinare generală: ________________________
+
+Teste de audiometrie (dacă este cazul): ________________________
+
+Probleme respiratorii sau de deglutiție: ________________________3. Examen audiometric:Rezultate: ________________________4. Examen dermatologic:Leziuni cutanate legate de expunerea profesională (dermatite de contact, iritații datorate substanțelor chimice, etc.): ________________________5. Examen toxicologic:Teste pentru depistarea expunerii la substanțe periculoase: ________________________IV. EVALUAREA RISCURILOR PROFESIONALE1. Riscuri mecanice:Se va evalua riscul de accidente mecanice sau traumatisme fizice (ex. tăieturi, contuzii, fracturi etc.):2. Riscuri chimice:Expunerea la substanțe chimice sau vapori (de exemplu, solvenți, substanțe toxice, prafuri):3. Riscuri biologice:Posibilitatea de expunere la agenți patogeni (bacterii, virusuri, ciuperci, etc.):4. Riscuri psihosociale:Evaluarea stresului, burnout-ului, și a altor tulburări psihologice legate de locul de muncă:5. Riscuri legate de postura sau manipularea manuală a încărcăturilor:Evaluarea riscurilor de dureri lombare, hernii sau afecțiuni musculo-scheletale:V. RECOMANDĂRI MEDICALE1. Recomandări pentru sănătatea generală:Dietă echilibrată, activitate fizică regulată, gestionarea stresului, etc.2. Recomandări legate de locul de muncă:Modificarea programului de lucru, pauze mai dese, echipamente de protecție suplimentare, ajustarea posturii de lucru, etc.3. Consulturi de specialitate:Se recomandă consultarea unui specialist în funcție de afecțiunile identificate (cardiolog, dermatolog, psihiatru, etc.).VI. APROBĂRI ȘI SEMNĂTURISemnătura medicului de medicina muncii:Nume și prenume: ________________________Data: ________________________Semnătura angajatului:Nume și prenume: ________________________Data: ________________________Acesta este un model detaliat de fișă pentru medicina muncii, care poate fi adaptat în funcție de specificul locului de muncă și al activităților desfășurate. Fiecare secțiune oferă o abordare completă asupra sănătății angajatului, asigurând un control adecvat și monitorizare în scopul protecției muncitorului.

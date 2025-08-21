@@ -1,0 +1,78 @@
+Fișă medicală înscriere facultate
+
+	
+	
+	
+
+		
+		I. DATE PERSONALE ALE CANDIDATULUI:Nume complet: ____________________________
+
+Sex: ____________________________
+
+Data nașterii: ____________________________
+
+Locul nașterii: ____________________________
+
+Adresă de domiciliu: ____________________________
+
+Telefon: ____________________________
+
+Email: ____________________________
+
+Cod numeric personal (CNP): ____________________________
+
+Starea civilă: ____________________________II. ISTORIC MEDICAL:Afecțiuni cronice sau preexistente:Da
+
+NuDacă răspunsul este afirmativ, specificați tipul de afecțiune, tratamentele urmate și istoricul medical relevant (de exemplu, boli cardiovasculare, diabet, boli autoimune, afecțiuni respiratorii cronice, afecțiuni neurologice etc.):
+
+Internări anterioare:Da
+
+NuDacă da, specificați motivele, durata internării și spitalul:
+
+Intervenții chirurgicale anterioare:Da
+
+NuDacă da, menționați tipul intervenției și anul:
+
+Alergii cunoscute (medicamente, alimente, substanțe etc.):Da
+
+NuDacă da, specificați alergenii:
+
+Istoric de boli infecțioase (tuberculoză, hepatite virale, HIV, infecții respiratorii grave etc.):Da
+
+NuDacă da, menționați tipul bolii și tratamentele efectuate:III. STAREA FIZICĂ ACTUALĂ:Greutate: __________ kg
+
+Înălțime: __________ cm
+
+Tensiune arterială: __________ mmHg
+
+Frecvența cardiacă: __________ bătăi/min
+
+Temperatura corporală: __________ °C
+
+Vedere:Normală
+
+Cu corecție optică (ochelari/lentile de contact)Dacă este cazul, menționați dioptriile și tipul de corecție optică:
+
+Auziune:Normală
+
+Cu deficiențeDacă există deficiențe de auz, menționați gradul și tipul acestora:IV. ANALIZE ȘI INVESTIGAȚII MEDICALE:Analize de sânge (data ultimei analize, rezultatele relevante, eventuale aberații):
+
+Examinări radiologice (dacă este cazul):
+
+Electrocardiogramă (EKG):Normală
+
+Anormalități (detalii):
+
+Alte investigații relevante (examinări neurologice, ecografii, etc.):V. VACCINĂRI ȘI IMUNIZĂRI:Istoric vaccinări (vaccinurile efectuate, data administrării și statutul de imunizare):Vaccin antitetanos
+
+Vaccin ROR (rujeolă, oreion, rubelă)
+
+Vaccin contra hepatitei B
+
+Alte vaccinuri (menționați)VI. MEDICAȚIE ACTUALĂ:Medicamente administrate în prezent (în orice formă – orală, injectabilă, topică):
+
+Tratament continuu pentru afecțiuni preexistente (dacă este cazul):
+
+Medicamente contraindicate (dacă există medicamente care nu pot fi administrate din cauza afecțiunilor medicale preexistente):VII. RECOMANDĂRI MEDICALE:Starea generală de sănătate (sănătos pentru a începe studiile la facultate, nevoia de tratament suplimentar, restricții fizice etc.):
+
+Recomandări suplimentare din partea medicului (privind activitățile fizice, alimentația, controale periodice, etc.):VIII. DECLARAȚIE ȘI SEMNĂTURA CANDIDATULUI:Subsemnatul, ____________________________, declar prin prezenta că informațiile furnizate în această fișă medicală sunt complete și corecte. Înțeleg importanța acestora în procesul de înscriere la facultate și îmi asum răspunderea pentru veridicitatea lor.Semnătura candidatului: ____________________________Data: ____________________________IX. SEMNĂTURA MEDICULUI:Eu, ____________________________, medic specialist, certific faptul că am examinat acest candidat și am evaluat starea sa de sănătate conform informațiilor prezentate mai sus. Starea sa medicală permite începerea studiilor la facultate, cu respectarea recomandărilor de mai sus, dacă este cazul.Semnătura medicului: ____________________________Ștampila: ____________________________Data: ____________________________Notă: Această fișă medicală trebuie completată integral și semnată atât de către candidatul în cauză, cât și de către medicul de familie sau specialist, în conformitate cu reglementările facultății la care se face înscrierea.
