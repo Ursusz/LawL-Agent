@@ -1,6 +1,4 @@
 import re
-from bs4 import BeautifulSoup
-from sklearn.metrics.pairwise import cosine_similarity
 
 LAW_REGEXES = [
     r"Legii nr\.\s*\d+/\d{4}",

@@ -73,7 +73,7 @@ def find_laws(references, document_text):
               law_text = fetch_local_reference(law_reference_standard)
               break
         # altfel aplic logica de web scraping
-        if law_text is None:
+        if len(law_text) == 0:
           law_text = fetch_online_reference(law_reference_standard)
     if law_text:
       relevant_article = bm25.get_most_relevant_fragment(law_text=law_text, context=document_text)

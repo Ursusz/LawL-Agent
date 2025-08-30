@@ -2,6 +2,7 @@ import requests
 from lxml import html
 import re, os
 from utilities import parse_law_title
+from bs4 import BeautifulSoup
 
 def get_leg_just_ro_content(url):
   response = requests.get(url)
@@ -23,7 +24,6 @@ def get_leg_just_ro_content(url):
   law = ""
   for index in range(len(article_titles)):
     law += article_titles[index].text_content() + "\n" + article_contents[index].text_content().replace("...", "") + "\n"
-
 
   tip_act, nr_act, an_act = parse_law_title.parse_law_title(law_title[0].text_content())
 

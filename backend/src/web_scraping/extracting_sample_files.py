@@ -1,7 +1,7 @@
 import requests
 from lxml import html
 import os
-from sample_files_extract import chrome_driver
+from sample_files_scrape import chrome_driver
 FOLDER_PATH = './sample_files/educatie'
 
 if not os.path.exists:

@@ -21,6 +21,16 @@ function Results() {
         Home
       </button>
 
+      <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-1000 p-4 mb-6 max-w-6xl mx-auto" role="alert">
+        <p className="font-bold">Atenție!</p>
+        <p className="text-sm">
+          Acest instrument folosește inteligența artificială pentru a procesa și a sumariza informații. 
+          Ca orice instrument de acest tip, poate conține erori și omisiuni. 
+          Informațiile prezentate aici nu înlocuiesc o documentare juridică aprofundată și nu au valoare legală. 
+          Nu ne asumăm responsabilitatea pentru acuratețea datelor furnizate.
+        </p>
+      </div>
+
       {results ? (
         <div className="space-y-4 max-w-6xl mx-auto">
           <h2 className="text-2xl font-semibold">Referințe legale găsite:</h2>
@@ -47,7 +57,7 @@ function Results() {
                       </button>
 
                       {openLaw === lawRef && (
-                        <div className="p-3 bg-gray-50 rounded-b-lg ml-2 mt-2 space-y-2">
+                        <div className="p-3 bg-blue-200 rounded-b-lg ml-2 mt-2 space-y-2">
                           {/* Text de lege intreg */}
                           <button
                             className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
@@ -59,8 +69,10 @@ function Results() {
                             ⚖️ Lege
                           </button>
                           {openLawText[lawRef] && (
-                            <div className="ml-4 text-sm mt-1 space-y-1">
-                              {law_details.law}
+                            <div className="ml-4 mt-1 space-y-1">
+                              <p className='p-4 bg-gray-300 rounded text-justify'>
+                                {law_details.law}
+                              </p>
                             </div>
                           )}
 
@@ -75,8 +87,10 @@ function Results() {
                             🔎 Sumar Lege
                           </button>
                           {openLawSummary[lawRef] && (
-                            <div className="ml-4 text-sm mt-1 space-y-1">
-                              {law_details.law_summary}
+                            <div className="ml-4 mt-1 space-y-1">
+                              <p className='p-4 bg-gray-300 rounded text-justify'>
+                                {law_details.law_summary}
+                              </p>
                             </div>
                           )}
 
@@ -92,7 +106,9 @@ function Results() {
                           </button>
                           {openArticle[lawRef] && (
                             <div className="ml-4 mt-1 space-y-1">
-                              {law_details.relevant_article}
+                              <p className='p-4 bg-gray-300 rounded text-justify'>
+                                {law_details.relevant_article}
+                              </p>
                             </div>
                           )}
 
@@ -108,7 +124,9 @@ function Results() {
                           </button>
                           {openSummaryArticle[lawRef] && (
                             <div className="ml-4 mt-1 space-y-1">
-                              {law_details.relevant_article_summary}
+                              <p className='p-4 bg-gray-300 rounded text-justify'>
+                                {law_details.relevant_article_summary}
+                              </p>
                             </div>
                           )}
 
@@ -124,10 +142,11 @@ function Results() {
                           </button>
                           {openLawSimplified[lawRef] && (
                             <div className="ml-4 mt-1 space-y-1">
-                              {law_details.law_simplified}
+                              <p className='p-4 bg-gray-300 rounded text-justify'>
+                                {law_details.law_simplified}
+                              </p>
                             </div>
                           )}
-
                         </div>
                       )}
                     </div>

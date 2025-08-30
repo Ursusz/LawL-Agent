@@ -8,6 +8,7 @@
     ```bash
     pipx install uv
     ```
+* **antiword** - sudo apt-get update && sudo apt-get install antiword
 
 ***
 
