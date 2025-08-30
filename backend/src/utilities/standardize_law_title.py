@@ -36,11 +36,7 @@ def extract_law_prefix(text: str) -> str:
     match = act_pattern.search(text)
     if match:
        prefix = match.group(1).upper()
-       if 'ORDONANTA' in prefix or 'URGENTA' in prefix:
-          return 'OUG'
-       if 'HOTARARE' in prefix:
-          return 'HG'
-       return prefix
+       return prefix.replace(' ', '_')
     return None
    
 
