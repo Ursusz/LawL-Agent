@@ -1,10 +1,16 @@
+import os
 import re
 import stanza
 import logging
 
 logging.getLogger("stanza").setLevel(logging.WARNING)
 
-# stanza.download("ro")
+home_dir = os.path.expanduser("~")
+stanza_dir_path = os.path.join(home_dir, "stanza_resources", "ro")
+
+if not os.path.isdir(stanza_dir_path):
+    stanza.download("ro")
+
 
 #### OLD VERSION!!
 

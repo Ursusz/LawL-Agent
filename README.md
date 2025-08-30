@@ -14,14 +14,16 @@
 
 ### 1. Configure Backend
 
-### Atentie! backend/src/utilities -> parse_law_title.py. Prima oara cand este rulat codul trebuie sters comentariul de la linia cu stanza.download("ro") apoi comentat inapoi.
-
 #### Google Gemini API KEY -> https://aistudio.google.com/app/apikey
 
 #### Brave Search API KEY -> https://brave.com/search/api/
 
- > In folderul backend se va crea un fisier **.env** cu urmatorul continut: GEMINI_API_KEY=your_api_key
+ > In folderul backend se va crea un fisier **.env** cu urmatorul continut:
 
+```
+GEMINI_API_KEY=your_api_key
+BRAVE_SEARCH_API_KEY=your_api_key
+```
 
 1. 
     ```bash
