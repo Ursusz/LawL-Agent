@@ -15,6 +15,6 @@ async def process_file(file: UploadFile) -> Dict[str, Any]:
     except Exception as e:
         results = {
             "filename": file.filename,
-            "error": f"Failed to process file: {e}"
+            "error": f"Failed to process file {file.filename}: {e}"
         }
     return results

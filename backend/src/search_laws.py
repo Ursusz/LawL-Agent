@@ -47,7 +47,9 @@ def fetch_online_reference(law_ref):
   print("Web scraping")
   brave_search_api.search_law_online(law_ref)
   filepath = find_local_reference(law_ref)
-  text = extract_text_txt(filepath)
+  text = ''
+  if filepath is not None:
+    text = extract_text_txt(filepath)
   return text
 
 def fetch_local_reference(law_ref):
@@ -61,17 +63,19 @@ def find_laws(references, document_text):
   for ref in references:
     result = standardize_law_title.standardize_law_title(ref)
     law_reference_standard = ''
+
+
+    ###################################################### AICI STANDARDIZEZ TITLUL LEGII #####################################################33
     tip_act, nr_act, an_act = result
     law_reference_standard = f'{tip_act}_{nr_act}_{an_act}'
-    # tip_act, nr_act, an_act = standardize_law_title.standardize_law_title(ref)
-    # law_reference_standard = f'{tip_act}_{nr_act}_{an_act}'
+
+
     law_text = ''
     # momentan, tip_act poate fi None din cauza patternului regex, poate referinta nu respecta patternul
     if tip_act is not None:
       if os.path.isdir(REFERENCE_DOCS_DIR):
         # iterez prin fisierele din reference_docs, daca gasesc un fisier cu acelasi nume ca referinta, fetch-uiesc local
         for file in os.listdir(REFERENCE_DOCS_DIR):
-          print(f"{law_reference_standard}.txt", f"  {file}")
           if file == f'{law_reference_standard}.txt':
             fpath = os.path.join(REFERENCE_DOCS_DIR, file)
             if os.path.isfile(fpath):

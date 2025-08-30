@@ -25,14 +25,15 @@ def get_leg_just_ro_content(url):
   for index in range(len(article_titles)):
     law += article_titles[index].text_content() + "\n" + article_contents[index].text_content().replace("...", "") + "\n"
 
-  # print(law_title[0].text_content())
   result = standardize_law_title.standardize_law_title(law_title[0].text_content())
-  # print(result)
-
+  
   # TODO -> Neimplementat caz in care referinta nu respecta niciun regex
   if result[0] is not None:
+
+    ############################################ AICI STANDARDIZEZ TITLUL LEGII ##################################################
     tip_act, nr_act, an_act = result
     file_name = f"{tip_act}_{nr_act}_{an_act}.txt"
+
     folder = "../reference_docs"
     if not os.path.exists(folder):
       os.makedirs(folder)
