@@ -89,8 +89,8 @@ def find_laws(references, document_text):
       laws[ref] = {
         "law": law_text,
         "law_summary": gemini_information[0],
-        "law_simplified": gemini_information[1],
+        # "law_simplified": gemini_information[1],
         "relevant_article": relevant_article,
-        "relevant_article_summary": gemini_information[2],
+        "relevant_article_summary": gemini_information[1],
       }
   return laws

@@ -12,6 +12,7 @@ TRUSTED_DOMAINS = [
 ]
 
 def search_law_online(reference):
+  print(f"[BRAVE API] search {reference}")
   result = requests.get(
     "https://api.search.brave.com/res/v1/web/search",
     headers={
