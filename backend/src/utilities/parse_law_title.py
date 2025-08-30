@@ -6,6 +6,8 @@ logging.getLogger("stanza").setLevel(logging.WARNING)
 
 # stanza.download("ro")
 
+#### OLD VERSION!!
+
 nlp = stanza.Pipeline("ro", processors="tokenize,pos,lemma")
 
 def lemmatize(text):

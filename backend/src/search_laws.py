@@ -2,7 +2,7 @@ import os
 from PyPDF2 import PdfReader
 from models import bm25, gemini_summary
 from web_scraping import brave_search_api
-from utilities import parse_law_title
+from utilities import parse_law_title, standardize_law_title
 
 REFERENCE_DOCS_DIR = '../reference_docs'
 
@@ -59,14 +59,19 @@ def fetch_local_reference(law_ref):
 def find_laws(references, document_text):
   laws = {}
   for ref in references:
-    tip_act, nr_act, an_act = parse_law_title.parse_law_title(ref)
+    result = standardize_law_title.standardize_law_title(ref)
+    law_reference_standard = ''
+    tip_act, nr_act, an_act = result
     law_reference_standard = f'{tip_act}_{nr_act}_{an_act}'
+    # tip_act, nr_act, an_act = standardize_law_title.standardize_law_title(ref)
+    # law_reference_standard = f'{tip_act}_{nr_act}_{an_act}'
     law_text = ''
     # momentan, tip_act poate fi None din cauza patternului regex, poate referinta nu respecta patternul
     if tip_act is not None:
       if os.path.isdir(REFERENCE_DOCS_DIR):
         # iterez prin fisierele din reference_docs, daca gasesc un fisier cu acelasi nume ca referinta, fetch-uiesc local
         for file in os.listdir(REFERENCE_DOCS_DIR):
+          print(f"{law_reference_standard}.txt", f"  {file}")
           if file == f'{law_reference_standard}.txt':
             fpath = os.path.join(REFERENCE_DOCS_DIR, file)
             if os.path.isfile(fpath):

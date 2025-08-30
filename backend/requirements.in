@@ -8,6 +8,5 @@ pypdf2
 scikit-learn
 numpy
 google-genai
-stanza
 selenium
 webdriver-manager

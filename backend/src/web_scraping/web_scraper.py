@@ -1,7 +1,7 @@
 import requests
 from lxml import html
 import re, os
-from utilities import parse_law_title
+from utilities import parse_law_title, standardize_law_title
 from bs4 import BeautifulSoup
 
 def get_leg_just_ro_content(url):
@@ -25,10 +25,13 @@ def get_leg_just_ro_content(url):
   for index in range(len(article_titles)):
     law += article_titles[index].text_content() + "\n" + article_contents[index].text_content().replace("...", "") + "\n"
 
-  tip_act, nr_act, an_act = parse_law_title.parse_law_title(law_title[0].text_content())
+  # print(law_title[0].text_content())
+  result = standardize_law_title.standardize_law_title(law_title[0].text_content())
+  # print(result)
 
   # TODO -> Neimplementat caz in care referinta nu respecta niciun regex
-  if tip_act is not None:
+  if result[0] is not None:
+    tip_act, nr_act, an_act = result
     file_name = f"{tip_act}_{nr_act}_{an_act}.txt"
     folder = "../reference_docs"
     if not os.path.exists(folder):
