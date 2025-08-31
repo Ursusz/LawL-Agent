@@ -41,7 +41,7 @@ function Results() {
 
               {item.references?.length > 0 && (
                 <p className="text-sm text-gray-600 mb-2">
-                  Referințe: {item.references.join(', ')}
+                  Referințe: {item.references.map(ref => (ref.charAt(0).toUpperCase() + ref.slice(1).toLowerCase()).replace('_', ' ').replace(/_/g, '/')).join(', ')}
                 </p>
               )}
 
