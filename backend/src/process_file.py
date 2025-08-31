@@ -13,8 +13,15 @@ async def process_file(file: UploadFile) -> Dict[str, Any]:
             "law_details": laws
         }
     except Exception as e:
+        error_msg = str(e)
+        if "503" in error_msg or "UNAVAILABLE" in error_msg:
+            frontend_err = "The Gemini AI service is temporarily unavailable due to high demand. Please try again in a few moments."
+        elif error_msg in ["law_summary", "law_simplified", "articles_summary", "notes"]:
+            frontend_err = "Gemini AI service failed to create the correct JSON format."
+        else:
+            frontend_err = f"Error processing file: {error_msg}"
         results = {
             "filename": file.filename,
-            "error": f"Failed to process file {file.filename}: {e}"
+            "error": frontend_err
         }
     return results

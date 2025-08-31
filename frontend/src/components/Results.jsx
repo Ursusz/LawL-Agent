@@ -24,9 +24,9 @@ function Results() {
       <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-1000 p-4 mb-6 max-w-6xl mx-auto" role="alert">
         <p className="font-bold">Atenție!</p>
         <p className="text-sm">
-          Acest instrument folosește inteligența artificială pentru a procesa și a sumariza informații. 
-          Ca orice instrument de acest tip, poate conține erori și omisiuni. 
-          Informațiile prezentate aici nu înlocuiesc o documentare juridică aprofundată și nu au valoare legală. 
+          Acest instrument folosește inteligența artificială pentru a procesa și a sumariza informații.
+          Ca orice instrument de acest tip, poate conține erori și omisiuni.
+          Informațiile prezentate aici nu înlocuiesc o documentare juridică aprofundată și nu au valoare legală.
           Nu ne asumăm responsabilitatea pentru acuratețea datelor furnizate.
         </p>
       </div>
@@ -58,99 +58,108 @@ function Results() {
 
                       {openLaw === lawRef && (
                         <div className="p-3 bg-blue-200 rounded-b-lg ml-2 mt-2 space-y-2">
-                          {/* Text de lege intreg */}
-                          <button
-                            className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                            onClick={() => setOpenLawText({
-                              ...openLawText,
-                              [lawRef]: !openLawText[lawRef]
-                            })}
-                          >
-                            ⚖️ Lege
-                          </button>
-                          {openLawText[lawRef] && (
-                            <div className="ml-4 mt-1 space-y-1">
-                              <p className='p-4 bg-gray-300 rounded text-justify'>
-                                {law_details.law}
-                              </p>
+                          {law_details.ERROR ? (
+                            <div className="p-4 bg-red-200 text-red-800 rounded">
+                              EROARE GEMINI: {law_details.ERROR}
                             </div>
-                          )}
+                          ) : (
+                            <>
+                              {/* Text de lege intreg */}
+                              <button
+                                className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                                onClick={() => setOpenLawText({
+                                  ...openLawText,
+                                  [lawRef]: !openLawText[lawRef]
+                                })}
+                              >
+                                ⚖️ Lege
+                              </button>
+                              {openLawText[lawRef] && (
+                                <div className="ml-4 mt-1 space-y-1">
+                                  <p className='p-4 bg-gray-300 rounded text-justify'>
+                                    {law_details.law}
+                                  </p>
+                                </div>
+                              )}
 
-                          {/* Text de lege sumarizat */}
-                          <button
-                            className="w-full text-left font-semibold px-2 py-1 bg-emerald-100 hover:bg-emerald-200 rounded"
-                            onClick={() => setOpenLawSummary({
-                              ...openLawSummary,
-                              [lawRef]: !openLawSummary[lawRef]
-                            })}
-                          >
-                            🔎 Sumar Lege
-                          </button>
-                          {openLawSummary[lawRef] && (
-                            <div className="ml-4 mt-1 space-y-1">
-                              <p className='p-4 bg-gray-300 rounded text-justify'>
-                                {law_details.law_summary}
-                              </p>
-                            </div>
-                          )}
+                              {/* Text de lege sumarizat */}
+                              <button
+                                className="w-full text-left font-semibold px-2 py-1 bg-emerald-100 hover:bg-emerald-200 rounded"
+                                onClick={() => setOpenLawSummary({
+                                  ...openLawSummary,
+                                  [lawRef]: !openLawSummary[lawRef]
+                                })}
+                              >
+                                🔎 Sumar Lege
+                              </button>
+                              {openLawSummary[lawRef] && (
+                                <div className="ml-4 mt-1 space-y-1">
+                                  <p className='p-4 bg-gray-300 rounded text-justify'>
+                                    {law_details.law_summary}
+                                  </p>
+                                </div>
+                              )}
 
-                          {/* Articolul cel mai relevant */}
-                          <button
-                            className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                            onClick={() => setOpenArticle({
-                              ...openArticle,
-                              [lawRef]: !openArticle[lawRef]
-                            })}
-                          >
-                            📜 Articol Relevant
-                          </button>
-                          {openArticle[lawRef] && (
-                            <div className="ml-4 mt-1 space-y-1">
-                              <p className='p-4 bg-gray-300 rounded text-justify'>
-                                {law_details.relevant_article}
-                              </p>
-                            </div>
-                          )}
+                              {/* Articolul cel mai relevant */}
+                              <button
+                                className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                                onClick={() => setOpenArticle({
+                                  ...openArticle,
+                                  [lawRef]: !openArticle[lawRef]
+                                })}
+                              >
+                                📜 Articol Relevant
+                              </button>
+                              {openArticle[lawRef] && (
+                                <div className="ml-4 mt-1 space-y-1">
+                                  <p className='p-4 bg-gray-300 rounded text-justify'>
+                                    {law_details.relevant_article}
+                                  </p>
+                                </div>
+                              )}
 
-                          {/* Sumarul articolului cel mai relevant */}
-                          <button
-                            className="w-full text-left font-semibold px-2 py-1 bg-emerald-100 hover:bg-emerald-200 rounded"
-                            onClick={() => setOpenSummaryArticle({
-                              ...openSummaryArticle,
-                              [lawRef]: !openSummaryArticle[lawRef]
-                            })}
-                          >
-                            ✍️ Sumar Articol
-                          </button>
-                          {openSummaryArticle[lawRef] && (
-                            <div className="ml-4 mt-1 space-y-1">
-                              <p className='p-4 bg-gray-300 rounded text-justify'>
-                                {law_details.relevant_article_summary}
-                              </p>
-                            </div>
-                          )}
+                              {/* Sumarul articolului cel mai relevant */}
+                              <button
+                                className="w-full text-left font-semibold px-2 py-1 bg-emerald-100 hover:bg-emerald-200 rounded"
+                                onClick={() => setOpenSummaryArticle({
+                                  ...openSummaryArticle,
+                                  [lawRef]: !openSummaryArticle[lawRef]
+                                })}
+                              >
+                                ✍️ Sumar Articol
+                              </button>
+                              {openSummaryArticle[lawRef] && (
+                                <div className="ml-4 mt-1 space-y-1">
+                                  <p className='p-4 bg-gray-300 rounded text-justify'>
+                                    {law_details.articles_summary}
+                                  </p>
+                                </div>
+                              )}
 
-                          {/* Lege simplificata */}
-                          <button
-                            className="w-full text-left font-semibold px-2 py-1 bg-green-300 hover:bg-green-400 rounded"
-                            onClick={() => setOpenLawSimplified({
-                              ...openLawSimplified,
-                              [lawRef]: !openLawSimplified[lawRef]
-                            })}
-                          >
-                            🙂 Lege Simplificata
-                          </button>
-                          {openLawSimplified[lawRef] && (
-                            <div className="ml-4 mt-1 space-y-1">
-                              <p className='p-4 bg-gray-300 rounded text-justify'>
-                                {law_details.law_simplified}
-                              </p>
-                            </div>
+                              {/* Lege simplificata */}
+                              <button
+                                className="w-full text-left font-semibold px-2 py-1 bg-green-300 hover:bg-green-400 rounded"
+                                onClick={() => setOpenLawSimplified({
+                                  ...openLawSimplified,
+                                  [lawRef]: !openLawSimplified[lawRef]
+                                })}
+                              >
+                                🙂 Lege Simplificata
+                              </button>
+                              {openLawSimplified[lawRef] && (
+                                <div className="ml-4 mt-1 space-y-1">
+                                  <p className='p-4 bg-gray-300 rounded text-justify'>
+                                    {law_details.law_simplified}
+                                  </p>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       )}
                     </div>
                   ))}
+
                 </div>
               ) : (
                 <span className="text-red-500">

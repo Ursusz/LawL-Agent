@@ -55,28 +55,13 @@ def find_laws(references, document_text):
   for ref in references:
     print("\n\n")
     print(f"Processing reference {ref}")
-    result = standardize_law_title.standardize_law_title(ref)
-    print(f"Normalized law ref -> {result}")
 
-    law_reference_standard = ''
-    tip_act = None
-    ###################################################### AICI STANDARDIZEZ TITLUL LEGII #####################################################33
-    if result is not None:
-      if len(result) == 3:
-        tip_act, nr_act, an_act = result
-        law_reference_standard = f'{tip_act}_{nr_act}_{an_act}'
-      elif len(result) == 4:
-        tip_act, nr_act1, nr_act2, an_act = result
-        law_reference_standard = f'{tip_act}_{nr_act1}_{nr_act2}_{an_act}'
-
-      law_text = ''
-      if tip_act is not None:
-        fileId = find_cloud_reference(f'{law_reference_standard}.txt')
-        if fileId is not None:
-          law_text = fetch_cloud_reference(fileId)
-        elif len(law_text) == 0:
-          law_text = fetch_online_reference(law_reference_standard)
-
+    law_text = ''
+    fileId = find_cloud_reference(f'{ref}.txt')
+    if fileId is not None:
+      law_text = fetch_cloud_reference(fileId)
+    elif len(law_text) == 0:
+      law_text = fetch_online_reference(ref)
 
     if law_text:
       print("Extracting most relevant article")
@@ -87,16 +72,25 @@ def find_laws(references, document_text):
       # gemini_information[1] -> lege intreaga simplificata
       # gemini_information[2] -> sumar articol relevant
       # TODO: implementare caz none standardizare
-      if result is None:
+      if ref is None:
         laws[ref] = {
           "ERROR": f"Error for {ref} -> Could not normalize law title."
         }
+      if gemini_information is not None:
+        if len(gemini_information) < 3 or gemini_information is None:
+          laws[ref] = {
+            "ERROR": f"Gemini failed to return structured format."
+          }
+        else:
+          laws[ref] = {
+            "law": law_text,
+            "law_summary": gemini_information[0],
+            "law_simplified": gemini_information[1],
+            "relevant_article": relevant_article,
+            "articles_summary": gemini_information[2],
+          }
       else:
         laws[ref] = {
-          "law": law_text,
-          "law_summary": gemini_information[0],
-          "law_simplified": gemini_information[1],
-          "relevant_article": relevant_article,
-          "relevant_article_summary": gemini_information[2],
+          "ERROR": f"Gemini did not return any answer."
         }
   return laws
