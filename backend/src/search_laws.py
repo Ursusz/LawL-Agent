@@ -2,28 +2,16 @@ import os
 from PyPDF2 import PdfReader
 from models import bm25, gemini_summary
 from web_scraping import brave_search_api
-from utilities import parse_law_title, standardize_law_title
+from utilities import standardize_law_title, cloud_file_management
 
 REFERENCE_DOCS_DIR = '../reference_docs'
 
-def find_local_reference(law_ref):
-  # mapping = {
-  #     'Ordinului 1855/2022': 'OMF_1855_2022.pdf',
-  # }
-  # fname = mapping.get(law_ref)
-  # if fname:
-  #     fpath = os.path.join(REFERENCE_DOCS_DIR, fname)
-  #     if os.path.exists(fpath):
-  #         return fpath
-  # return None
-  if os.path.isdir(REFERENCE_DOCS_DIR):
-    for file in os.listdir(REFERENCE_DOCS_DIR):
-      if file == f'{law_ref}.txt':
-        fpath = os.path.join(REFERENCE_DOCS_DIR, file)
-        if os.path.isfile(fpath):
-          return fpath
+def find_cloud_reference(law_ref):
+  fileName = f'{law_ref}'
+  res = cloud_file_management.search_file_in_cloud(fileName)
+  if res is not None:
+    return res['id']
   return None
-
 
 def extract_text_pdf(filepath):
   if filepath is None:
@@ -45,56 +33,70 @@ def extract_text_txt(filepath):
 def fetch_online_reference(law_ref):
   # brave_search_api -> ia primul site cel mai relevant (+ de incredere), apoi un web scraper extrage continutul si il salveaza intr-un fisier cu numele {referinta_standardizata}
   print("Web scraping")
+  print(f"Searching online for reference {law_ref}")
   brave_search_api.search_law_online(law_ref)
-  filepath = find_local_reference(law_ref)
+  fileId = find_cloud_reference(f'{law_ref}.txt')
+  print(f"File ID where local ref is now saved -> {fileId}")
   text = ''
-  if filepath is not None:
-    text = extract_text_txt(filepath)
+  if fileId is not None:
+    # text = extract_text_txt(filepath)
+    text = fetch_cloud_reference(fileId)
+    print("Sucesfully extracted law text from cloud")
   return text
 
-def fetch_local_reference(law_ref):
-  print("Local Corpus")
-  filepath = find_local_reference(law_ref)
-  text = extract_text_txt(filepath)
-  return text
+def fetch_cloud_reference(fileId):
+  print("Cloud Corpus")
+  print("Looking in cloud corpus")
+  file_content = cloud_file_management.download_file_content(fileId)
+  return file_content
 
 def find_laws(references, document_text):
   laws = {}
   for ref in references:
+    print("\n\n")
+    print(f"Processing reference {ref}")
     result = standardize_law_title.standardize_law_title(ref)
+    print(f"Normalized law ref -> {result}")
+
     law_reference_standard = ''
-
-
+    tip_act = None
     ###################################################### AICI STANDARDIZEZ TITLUL LEGII #####################################################33
-    tip_act, nr_act, an_act = result
-    law_reference_standard = f'{tip_act}_{nr_act}_{an_act}'
+    if result is not None:
+      if len(result) == 3:
+        tip_act, nr_act, an_act = result
+        law_reference_standard = f'{tip_act}_{nr_act}_{an_act}'
+      elif len(result) == 4:
+        tip_act, nr_act1, nr_act2, an_act = result
+        law_reference_standard = f'{tip_act}_{nr_act1}_{nr_act2}_{an_act}'
 
-
-    law_text = ''
-    # momentan, tip_act poate fi None din cauza patternului regex, poate referinta nu respecta patternul
-    if tip_act is not None:
-      if os.path.isdir(REFERENCE_DOCS_DIR):
-        # iterez prin fisierele din reference_docs, daca gasesc un fisier cu acelasi nume ca referinta, fetch-uiesc local
-        for file in os.listdir(REFERENCE_DOCS_DIR):
-          if file == f'{law_reference_standard}.txt':
-            fpath = os.path.join(REFERENCE_DOCS_DIR, file)
-            if os.path.isfile(fpath):
-              law_text = fetch_local_reference(law_reference_standard)
-              break
-        # altfel aplic logica de web scraping
-        if len(law_text) == 0:
+      law_text = ''
+      if tip_act is not None:
+        fileId = find_cloud_reference(f'{law_reference_standard}.txt')
+        if fileId is not None:
+          law_text = fetch_cloud_reference(fileId)
+        elif len(law_text) == 0:
           law_text = fetch_online_reference(law_reference_standard)
+
+
     if law_text:
+      print("Extracting most relevant article")
       relevant_article = bm25.get_most_relevant_fragment(law_text=law_text, context=document_text)
+      print("Waiting for gemini information")
       gemini_information = gemini_summary.get_gemini_informations_about_law(law_text, relevant_article)
       # gemini_information[0] -> sumar lege intreaga
       # gemini_information[1] -> lege intreaga simplificata
       # gemini_information[2] -> sumar articol relevant
-      laws[ref] = {
-        "law": law_text,
-        "law_summary": gemini_information[0],
-        "law_simplified": gemini_information[1],
-        "relevant_article": relevant_article,
-        "relevant_article_summary": gemini_information[2],
-      }
+      # TODO: implementare caz none standardizare
+      if result is None:
+        laws[ref] = {
+          "ERROR": f"Error for {ref} -> Could not normalize law title."
+        }
+      else:
+        laws[ref] = {
+          "law": law_text,
+          "law_summary": gemini_information[0],
+          "law_simplified": gemini_information[1],
+          "relevant_article": relevant_article,
+          "relevant_article_summary": gemini_information[2],
+        }
   return laws

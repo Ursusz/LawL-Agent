@@ -40,6 +40,7 @@ def extract_text_doc(file_content):
         stripped_text = ""
         for row in text_output.split('\n'):
             stripped_text += row or ""
+        # print(stripped_text)
         return stripped_text
     except subprocess.CalledProcessError as e:
         print(f"Error while processing file .doc: {e}")
