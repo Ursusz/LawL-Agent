@@ -1,49 +1,50 @@
 import os
 import io
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+import json
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from googleapiclient.http import MediaIoBaseDownload
 
-SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+SCOPES = ["https://www.googleapis.com/auth/drive"] 
+
 current_folder = './utilities'
-credentials_location = os.path.join(current_folder, 'credentials.json')
-token_location = os.path.join(current_folder, 'token.json')
+
+SERVICE_ACCOUNT_FILE = os.path.join(current_folder, 'service_account_key.json') 
+
+FOLDER_ID = '0APJmM8bO6kV5Uk9PVA'
 
 def get_drive_service():
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists(token_location):
-        creds = Credentials.from_authorized_user_file(token_location, SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                credentials_location, SCOPES
-            )
-            creds = flow.run_local_server(port=0, acces_type='offline', prompt='consent')
-        # Save the credentials for the next run
-        with open(token_location, "w") as token:
-            token.write(creds.to_json())
-    return build('drive', 'v3', credentials=creds)
+    try:
+        creds = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE, scopes=SCOPES
+        )
+
+        service = build('drive', 'v3', credentials=creds)
+        print("Auth on gdrive was successful.")
+        return service
+        
+    except FileNotFoundError:
+        print(f"Eroare: The file containing service key was not found at: {SERVICE_ACCOUNT_FILE}.")
+        return None
+    except Exception as e:
+        print(f"An auth error occured: {e}")
+        return None
 
 def save_file_in_cloud(file_pth):
+    print(f"Saving file {file_pth} in gdrive...")
     service = get_drive_service()
+    if not service: return
     try:
         fname = os.path.basename(file_pth)
-        file_metadata = {
-            'name': fname
-        }
-        media = MediaFileUpload(file_pth, mimetype='text/plain')
+        file_metadata = {'name': fname,
+                         'parents': [FOLDER_ID]}
+        
+        media = MediaFileUpload(file_pth, mimetype='application/octet-stream') 
+        
         file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        print(f"Fisierul cu ID-ul: {file.get('id')} a fost incarcat cu succes.")
+        print(f"File with ID-ul: {file.get('id')} was successfully uploaded.")
     except HttpError as error:
         print(f"An error occured: {error}")
     finally:
@@ -54,7 +55,9 @@ def save_file_in_cloud(file_pth):
             print(f"File '{file_pth}' does not exist in local storage.")
 
 def search_file_in_cloud(file_name):
+    print("Searching for law reference in gdrive...")
     service = get_drive_service()
+    if not service: return None
     fname = os.path.basename(file_name)
     try:
         query = f"name = '{fname}'"
@@ -75,7 +78,9 @@ def search_file_in_cloud(file_name):
         return None
   
 def download_file_content(file_id):
+    print("Downloading file from gdrive...")
     service = get_drive_service()
+    if not service: return None
     try:
         request = service.files().get_media(fileId=file_id)
 
@@ -88,7 +93,8 @@ def download_file_content(file_id):
             print(f"Downloading {int(status.progress() * 100)}%.")
 
         file_buffer.seek(0)
-        file_content = file_buffer.read().decode('utf-8')
+        file_content = file_buffer.read().decode('utf-8') 
+        print(file_content)
         return file_content
     except Exception as e:
         print(f"An error occured downloading file: {e}")

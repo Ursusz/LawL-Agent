@@ -82,8 +82,6 @@ def get_gemini_informations_about_law(law_text, relevant_article):
         return None
     responses = [response.get('law_summary', ''), response.get('law_simplified', ''), response.get('articles_summary', '')]
     print(f"[GEMINI] notes {response.get('notes', '')}")
-    print('\n\n', responses)
-    print('\n\n', len(responses))
     return responses
 
 def extract_code_block(text: str, label: str) -> str:

@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+function parse_law_title(law_title) {
+  return (law_title.charAt(0).toUpperCase() + law_title.slice(1).toLowerCase()).replace('_', ' ').replace(/_/g, '/')
+}
+
 function Results() {
   const location = useLocation();
   const { results } = location.state || {};
@@ -22,8 +26,8 @@ function Results() {
       </button>
 
       <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-1000 p-4 mb-6 max-w-6xl mx-auto" role="alert">
-        <p className="font-bold">Atenție!</p>
-        <p className="text-sm">
+        <p className="font-bold text-center text-lg">Atenție!</p>
+        <p className="text-sm text-center">
           Acest instrument folosește inteligența artificială pentru a procesa și a sumariza informații.
           Ca orice instrument de acest tip, poate conține erori și omisiuni.
           Informațiile prezentate aici nu înlocuiesc o documentare juridică aprofundată și nu au valoare legală.
@@ -41,7 +45,7 @@ function Results() {
 
               {item.references?.length > 0 && (
                 <p className="text-sm text-gray-600 mb-2">
-                  Referințe: {item.references.map(ref => (ref.charAt(0).toUpperCase() + ref.slice(1).toLowerCase()).replace('_', ' ').replace(/_/g, '/')).join(', ')}
+                  Referințe: {item.references.map(ref => parse_law_title(ref)).join(', ')}
                 </p>
               )}
 
@@ -53,7 +57,7 @@ function Results() {
                         className="w-full text-left font-semibold px-3 py-2 bg-green-100 hover:bg-green-200 rounded-lg"
                         onClick={() => setOpenLaw(openLaw === lawRef ? null : lawRef)}
                       >
-                        🔎 {lawRef}
+                        🔎 {parse_law_title(lawRef)}
                       </button>
 
                       {openLaw === lawRef && (
