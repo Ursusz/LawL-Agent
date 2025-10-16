@@ -1,7 +1,5 @@
 __pycache__/
 *.pyc
 .env
-credentials.json
-token.json
 TMP
 service_account_key.json
