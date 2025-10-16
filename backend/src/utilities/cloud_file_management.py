@@ -60,10 +60,10 @@ def search_file_in_cloud(file_name):
     if not service: return None
     fname = os.path.basename(file_name)
     try:
-        query = f"name = '{fname}'"
+        query = f"name = '{fname}' and '{FOLDER_ID}' in parents"
         results = (
             service.files()
-            .list(q=query, spaces="drive", fields="nextPageToken, files(id, name, mimeType)")
+            .list(q=query, spaces="drive", fields="nextPageToken, files(id, name, mimeType)", includeItemsFromAllDrives=True, supportsAllDrives=True)
             .execute()
         )
         items = results.get("files", [])
@@ -94,7 +94,7 @@ def download_file_content(file_id):
 
         file_buffer.seek(0)
         file_content = file_buffer.read().decode('utf-8') 
-        print(file_content)
+        # print(file_content)
         return file_content
     except Exception as e:
         print(f"An error occured downloading file: {e}")

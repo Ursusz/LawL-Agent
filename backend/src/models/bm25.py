@@ -1,7 +1,7 @@
 from rank_bm25 import BM25Okapi
 import re
 
-ART_FRAGMENT_REGEX = r'(?:Articolul|ART\.)\s+\d+[\s\S]*?(?=(?:Articolul|ART\.)\s+\d+|$)'
+ART_FRAGMENT_REGEX = r'(?:Articolul|ART\.)\s+(?:[IVXLCDM]+|\d+)[\s\S]*?(?=(?:Articolul|ART\.)\s+(?:[IVXLCDM]+|\d+)|$)'
 
 def is_example_article(article_text):
     example_regex = r'Exemplul|Exemple privind'
@@ -21,7 +21,11 @@ def tokenize(fragment):
     return re.findall(r'\w+', fragment.lower())
 
 def get_most_relevant_fragment(law_text, context):
+    print(law_text)
     text_fragments = extract_law_fragments(law_text)
+
+    if not text_fragments:
+        return "Eroare: Nu s-au putut extrage fragmente/articole din textul legii." 
 
     tokenized_fragments = [tokenize(fragment) for fragment in text_fragments]
 
