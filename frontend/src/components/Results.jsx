@@ -15,6 +15,7 @@ function Results() {
   const [openSummaryArticle, setOpenSummaryArticle] = useState({});
   const [openLawSummary, setOpenLawSummary] = useState({});
   const [openLawSimplified, setOpenLawSimplified] = useState({});
+  const [openUrlSource, setOpenUrlSource] = useState({});
 
   return (
     <div className="p-6">
@@ -68,6 +69,27 @@ function Results() {
                             </div>
                           ) : (
                             <>
+                              {/* Url sursa lege */}
+                               <button
+                                className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                                onClick={() => setOpenUrlSource({
+                                  ...openUrlSource,
+                                  [lawRef]: !openUrlSource[lawRef]
+                                })}
+                              >
+                                🔗 URL
+                              </button>
+                              {openUrlSource[lawRef] && (
+                                <div className="ml-4 mt-1 space-y-1">
+                                  <p className='p-4 bg-gray-300 rounded text-justify'>
+                                    {law_details?.url ? (
+                                      <a href={law_details.url} target="_blank" rel="noreferrer">
+                                        {law_details.url}
+                                      </a>
+                                    ) : 'No url available'}
+                                  </p>
+                                </div>
+                              )}
                               {/* Text de lege intreg */}
                               <button
                                 className="w-full text-left font-semibold px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"

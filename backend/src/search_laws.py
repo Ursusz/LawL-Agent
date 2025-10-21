@@ -2,7 +2,7 @@ import os
 from PyPDF2 import PdfReader
 from models import bm25, gemini_summary
 from web_scraping import brave_search_api
-from utilities import standardize_law_title, cloud_file_management
+from utilities import cloud_file_management
 
 REFERENCE_DOCS_DIR = '../reference_docs'
 
@@ -30,7 +30,7 @@ def extract_text_txt(filepath):
     text = f.read() or ''
   return text
 
-def fetch_online_reference(law_ref):
+def fetch_online_reference(law_ref): #find law on brave api and download it
   # brave_search_api -> ia primul site cel mai relevant (+ de incredere), apoi un web scraper extrage continutul si il salveaza intr-un fisier cu numele {referinta_standardizata}
   print("Web scraping")
   print(f"Searching online for reference {law_ref}")
@@ -40,15 +40,20 @@ def fetch_online_reference(law_ref):
   text = ''
   if fileId is not None:
     # text = extract_text_txt(filepath)
-    text = fetch_cloud_reference(fileId)
+    text, url = fetch_cloud_reference(fileId)
     print("Sucesfully extracted law text from cloud")
   return text
 
-def fetch_cloud_reference(fileId):
+def fetch_cloud_reference(fileId): #downloading from gdrive
   print("Cloud Corpus")
   print("Looking in cloud corpus")
   file_content = cloud_file_management.download_file_content(fileId)
-  return file_content
+  lines = file_content.splitlines()
+  if len(lines) > 1:
+    file_content = '\n'.join(lines[1:]) #sterge sursa textului legii (url-ul) de pe primul rand
+  url = lines[0]
+
+  return file_content, url 
 
 def find_laws(references, document_text):
   laws = {}
@@ -57,11 +62,12 @@ def find_laws(references, document_text):
     print(f"Processing reference {ref}")
 
     law_text = ''
+    url = ''
     fileId = find_cloud_reference(f'{ref}.txt')
     if fileId is not None:
-      law_text = fetch_cloud_reference(fileId)
+      law_text, url = fetch_cloud_reference(fileId) #download from gdrive
     elif len(law_text) == 0:
-      law_text = fetch_online_reference(ref)
+      law_text = fetch_online_reference(ref) #browse on brave and scrape the content
 
     if law_text:
       print("Extracting most relevant article")
@@ -84,6 +90,7 @@ def find_laws(references, document_text):
           }
         else:
           laws[ref] = {
+            "url": url if len(url) > 0 else "No url available",
             "law": law_text,
             "law_summary": gemini_information[0],
             "law_simplified": gemini_information[1],

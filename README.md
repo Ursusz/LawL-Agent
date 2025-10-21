@@ -27,10 +27,7 @@ GEMINI_API_KEY=your_api_key
 BRAVE_SEARCH_API_KEY=your_api_key
 ```
 
- ### Tutorial Google Drive API KEY: https://developers.google.com/workspace/guides/configure-oauth-consent
-Ulterior, dupa ce a fost creat un user in OAuth 2.0 Client IDs trebuie sa fie descarcat JSON-ul din Client Secrets, acel JSON trebuie plasat in:
-```
-backend/src/utilities/{credentials.json}
+ ### Tutorial Google Drive API KEY: TODO
 ```
 
 1. 

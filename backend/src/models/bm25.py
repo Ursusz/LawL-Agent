@@ -21,7 +21,6 @@ def tokenize(fragment):
     return re.findall(r'\w+', fragment.lower())
 
 def get_most_relevant_fragment(law_text, context):
-    print(law_text)
     text_fragments = extract_law_fragments(law_text)
 
     if not text_fragments:

@@ -1,8 +1,6 @@
 import requests
 from lxml import html
-import re, os
-from utilities import parse_law_title, standardize_law_title
-from bs4 import BeautifulSoup
+import os
 from utilities import cloud_file_management
 
 def get_leg_just_ro_content(url, reference):
@@ -30,5 +28,6 @@ def get_leg_just_ro_content(url, reference):
     
   file_saving_location = os.path.join(folder, file_name)
   with open(file_saving_location, "w") as file:
-          file.write(law)
+    file.write(url + "\n")
+    file.write(law)
   cloud_file_management.save_file_in_cloud(file_saving_location)
