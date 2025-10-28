@@ -11,7 +11,7 @@ SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 current_folder = './utilities'
 
-SERVICE_ACCOUNT_FILE = os.path.join(current_folder, 'service_account_key.json') 
+SERVICE_ACCOUNT_FILE = os.path.join(current_folder, 'credentials.json')
 
 FOLDER_ID = '0APJmM8bO6kV5Uk9PVA'
 
