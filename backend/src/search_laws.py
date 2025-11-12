@@ -1,8 +1,8 @@
 import os
 from PyPDF2 import PdfReader
-from models import bm25, gemini_summary
-from web_scraping import brave_search_api
-from utilities import standardize_law_title, cloud_file_management
+from .models import bm25, gemini_summary
+from .web_scraping import brave_search_api
+from .utilities import standardize_law_title, cloud_file_management
 
 REFERENCE_DOCS_DIR = '../reference_docs'
 

@@ -2,7 +2,10 @@ import re
 import unicodedata
 import stanza
 
-nlp = stanza.Pipeline("ro", processors="tokenize,pos,lemma")
+# nlp = stanza.Pipeline("ro", processors="tokenize,pos,lemma")
+nlp = stanza.Pipeline("ro",
+                      package="rrt",
+                      processors="tokenize,pos,lemma")
 
 def lemmatize(text):
   text = text.lower()

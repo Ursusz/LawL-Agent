@@ -1,5 +1,5 @@
 import re
-from utilities import standardize_law_title
+from .utilities import standardize_law_title
 
 LAW_REGEXES = [
     r"(?:Lege|Legea|Legii|L\.?)\s*(?:[^\d]*)?\s*(?:nr\.?\s*)?\d+(?:/\d+)*",
@@ -28,6 +28,6 @@ def extract_law_references(text):
                       law_reference_standard = f'{tip_act}_{nr_act1}_{nr_act2}_{an_act}'
                     else:
                         continue
-                if law_reference_standard is not '':
+                if law_reference_standard != '':
                     refs.add(law_reference_standard)
     return list(refs)
