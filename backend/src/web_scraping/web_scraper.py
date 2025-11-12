@@ -1,7 +1,7 @@
 import requests
 from lxml import html
-import os
-from utilities import cloud_file_management
+import re, os
+from ..utilities import parse_law_title, standardize_law_title, cloud_file_management
 
 def get_leg_just_ro_content(url, reference):
   response = requests.get(url)

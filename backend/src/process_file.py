@@ -1,6 +1,9 @@
 from fastapi import UploadFile
 from typing import List, Dict, Any
-import parse_documents, extract_references, search_laws
+from . import parse_documents
+from . import extract_references
+from . import search_laws
+
 
 async def process_file(file: UploadFile) -> Dict[str, Any]:
     try:

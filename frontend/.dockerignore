@@ -1,0 +1,11 @@
+# Ignore the local node_modules folder
+node_modules
+
+# Ignore the build output folder (it will be created inside the container)
+build
+
+# Ignore local environment variables
+.env
+
+# Ignore npm debug logs
+npm-debug.log

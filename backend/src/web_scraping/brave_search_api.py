@@ -1,7 +1,7 @@
 import requests
 from dotenv import load_dotenv
 import os
-from web_scraping import web_scraper
+from . import web_scraper
 import json
 
 load_dotenv()

@@ -1,6 +1,7 @@
 import os
 import io
 import json
+from pathlib import Path
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -9,9 +10,9 @@ from googleapiclient.http import MediaIoBaseDownload
 
 SCOPES = ["https://www.googleapis.com/auth/drive"] 
 
-current_folder = './utilities'
+script_dir = Path(__file__).parent.resolve()
 
-SERVICE_ACCOUNT_FILE = os.path.join(current_folder, 'credentials.json')
+SERVICE_ACCOUNT_FILE = script_dir / 'service_account_key.json'
 
 FOLDER_ID = '0APJmM8bO6kV5Uk9PVA'
 
