@@ -1,0 +1,7 @@
+This is a plain text test file without formatting.
+
+It contains personal information that should be redacted:
+- Email: user@domain.com
+- Phone number: 0723 456 789
+
+And some regular content that should remain unchanged.
