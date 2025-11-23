@@ -8,7 +8,7 @@ const getExtension = (filename) => {
 };
 
 // Extract text from PDF using scribe.js-ocr
-const extractPdf = async (file) => {
+const extractOCR = async (file) => {
     const result = await scribe.extractText([file]);
     return result;
 };
@@ -39,7 +39,7 @@ const extractWithPandoc = async (file) => {
         const extension = getExtension(file.name);
 
         // Binary formats need to be passed as Blob, text formats as string
-        const binaryFormats = ['odt', 'epub', 'docx'];
+        const binaryFormats = ['odt', 'epub', 'docx', 'pdf', 'rtf', 'png', 'jpg', 'jpeg'];
         const isBinary = binaryFormats.includes(extension);
 
         const input = isBinary ? file : await file.text();
@@ -93,7 +93,7 @@ export const extractContent = async (file) => {
 
     // Define supported formats
     const supportedFormats = [
-        'pdf', 'docx', 'txt',
+        'pdf', 'png', 'jpeg', 'jpg', 'docx', 'txt',
         'md', 'markdown', 'html', 'htm', 'rtf', 'tex', 'latex',
         'rst', 'org', 'textile', 'mediawiki', 'docbook', 'epub', 'odt'
     ];
@@ -112,8 +112,8 @@ export const extractContent = async (file) => {
     }
 
     try {
-        if (extension === 'pdf') {
-            return await extractPdf(file);
+        if (extension === 'pdf' || extension === 'png' || extension === 'jpeg' || extension === 'jpg') {
+            return await extractOCR(file);
         } else if (extension === 'docx') {
             return await extractDocx(file);
         } else if (extension === 'txt') {
@@ -141,9 +141,10 @@ export const redactPII = (text) => {
     // Redact email addresses
     redacted = redacted.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL REDACTED]');
 
-    // Redact phone numbers (various formats)
-    redacted = redacted.replace(/\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g, '[PHONE REDACTED]');
-    redacted = redacted.replace(/0\d{3}[-.\s]?\d{3}[-.\s]?\d{3}/g, '[PHONE REDACTED]');
+    // Redact phone numbers (10 or 11 digits, allowing common separators)
+    // This regex matches optional leading + and country code, then a sequence of digits totaling 10 or 11 digits.
+    // Allowed separators are spaces, dashes, periods, or parentheses. It deliberately excludes slashes to avoid redacting law numbers or dates.
+    redacted = redacted.replace(/(?<!\/)(?:\+?\d[\d .-]{8,13}\d)/g, '[PHONE REDACTED]');
 
     return redacted;
 };
