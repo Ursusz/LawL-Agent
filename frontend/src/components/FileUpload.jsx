@@ -179,7 +179,7 @@ export default function FileUpload({ setLoading }) {
                     or click to browse
                   </p>
                   <p className="text-cyan-300 text-xs font-medium">
-                    Supports: PDF, DOCX, TXT, MD
+                    Supports: PDF, DOCX, TXT, MD, HTML, RTF, and more
                   </p>
                 </>
               )}

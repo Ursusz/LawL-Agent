@@ -1,125 +1,149 @@
-import mammoth from 'mammoth';
-// scribe.js-ocr might need specific import depending on how it exports, usually it's a default or named export. 
-// Based on common patterns and the lack of types, I'll try default first, but might need adjustment.
-// Actually, for client-side libs without types, sometimes dynamic import or specific path is safer if it's not a standard module.
-// Let's assume standard import for now.
 import scribe from 'scribe.js-ocr';
-// pandoc-wasm usually requires initialization
-import pandoc from 'pandoc-wasm';
+import mammoth from 'mammoth';
+import { pandoc } from 'wasm-pandoc';
 
-export const extractContent = async (file) => {
-    const fileType = file.type;
-    const fileName = file.name.toLowerCase();
-
-    try {
-        if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
-            return await extractPdf(file);
-        } else if (
-            fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-            fileName.endsWith('.docx')
-        ) {
-            return await extractDocx(file);
-        } else {
-            // Fallback to pandoc for other formats
-            return await extractPandoc(file);
-        }
-    } catch (error) {
-        console.error(`Error extracting content from ${file.name}:`, error);
-        throw new Error(`Failed to process ${file.name}: ${error.message}`);
-    }
+// Helper: get file extension
+const getExtension = (filename) => {
+    return filename.split('.').pop().toLowerCase();
 };
 
+// Extract text from PDF using scribe.js-ocr
 const extractPdf = async (file) => {
-    // scribe.js-ocr expects an array of File objects (or URLs/paths in Node)
-    // It handles the reading internally.
     const result = await scribe.extractText([file]);
     return result;
 };
 
+// Extract text from DOCX using mammoth
 const extractDocx = async (file) => {
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.extractRawText({ arrayBuffer });
     return result.value;
 };
 
-const extractPandoc = async (file) => {
-    // pandoc-wasm initialization
-    // It usually needs to load the wasm file.
-    // This might require copying the wasm file to public folder or configuring webpack/vite.
-    // For now, I'll assume the default initialization works or it fetches from CDN if not found.
-
-    // NOTE: pandoc-wasm might be heavy to initialize every time. 
-    // Ideally we initialize it once.
-
-    // Simple text extraction for common text files if pandoc fails or is overkill?
-    // No, user requested pandoc for "everything else".
-
-    // We need to read the file as string or buffer depending on what pandoc-wasm expects.
-    // Usually it expects a string and format.
-
-    const text = await file.text();
-    // Guess format from extension
-    const extension = file.name.split('.').pop();
-
-    // pandoc-wasm usage:
-    // await pandoc.init();
-    // const result = await pandoc.convert(text, { from: extension, to: 'plain' });
-
-    // Let's try to initialize if not already done.
-    // This is a simplified implementation.
-
-    // Note: pandoc-wasm might not be importable this way if it's not bundled correctly.
-    // But let's try.
-
-    // If pandoc-wasm is not compatible with this environment directly, we might need a fallback.
-    // But sticking to the plan.
-
-    // Initialize only if needed (mock check)
-    // await pandoc.init(); 
-
-    // Actually, looking at pandoc-wasm docs (simulated), it usually exports a factory.
-    // import { Pandoc } from 'pandoc-wasm';
-    // const converter = new Pandoc();
-    // await converter.init();
-
-    // Since I don't have the exact API docs in front of me for this specific fork,
-    // I will assume a standard `convert` function or similar.
-
-    // Let's try a safer approach for "everything else" which is likely text-based.
-    // If it's binary, pandoc might fail anyway.
-
-    // For now, let's assume it's text and return it directly if it's a simple text file,
-    // but user asked for pandoc.
-
-    // Placeholder for actual pandoc-wasm logic which can be complex to setup.
-    // I will implement a basic text read for now and add a TODO for full pandoc integration
-    // if the library proves difficult to setup without config changes.
-    // BUT, I must try to use it.
-
-    // Let's assume `pandoc-wasm` exports a `convert` function.
-    // If this fails during verification, I will fix it.
-
-    // return await pandoc.convert(text, { from: extension, to: 'plain' });
-
-    // Fallback to simple text for now to ensure the app doesn't crash while I verify the lib.
-    return text;
+// Simple markdown to text converter (fallback)
+const convertMarkdown = (text) => {
+    return text
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/(\*\*|__)(.*?)\1/g, '$2')
+        .replace(/(\*|_)(.*?)\1/g, '$2')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/`([^`]+)`/g, '$1')
+        .trim();
 };
 
+// Extract using wasm-pandoc
+const extractWithPandoc = async (file) => {
+    try {
+        const extension = getExtension(file.name);
+
+        // Binary formats need to be passed as Blob, text formats as string
+        const binaryFormats = ['odt', 'epub', 'docx'];
+        const isBinary = binaryFormats.includes(extension);
+
+        const input = isBinary ? file : await file.text();
+
+        // Map extensions to pandoc format names
+        const formatMap = {
+            'md': 'markdown',
+            'markdown': 'markdown',
+            'html': 'html',
+            'htm': 'html',
+            'rtf': 'rtf',
+            'tex': 'latex',
+            'latex': 'latex',
+            'rst': 'rst',
+            'org': 'org',
+            'textile': 'textile',
+            'mediawiki': 'mediawiki',
+            'docbook': 'docbook',
+            'epub': 'epub',
+            'odt': 'odt',
+        };
+
+        const fromFormat = formatMap[extension] || 'markdown';
+
+        console.log(`[fileProcessor] Converting ${extension} using pandoc: ${fromFormat} -> markdown`);
+
+        const result = await pandoc(
+            `-f ${fromFormat} -t markdown`,
+            input,
+            []
+        );
+
+        return result.out;
+    } catch (error) {
+        console.error('[fileProcessor] Pandoc conversion error:', error);
+        // Fallback to simple markdown conversion if it's markdown, otherwise raw text
+        const extension = getExtension(file.name);
+        if (extension === 'md' || extension === 'markdown') {
+            const text = await file.text();
+            return convertMarkdown(text);
+        }
+        throw error;
+    }
+};
+
+// Main extraction dispatcher
+export const extractContent = async (file) => {
+    const extension = getExtension(file.name);
+
+    console.log(`[fileProcessor] Extracting ${extension} file:`, file.name);
+
+    // Define supported formats
+    const supportedFormats = [
+        'pdf', 'docx', 'txt',
+        'md', 'markdown', 'html', 'htm', 'rtf', 'tex', 'latex',
+        'rst', 'org', 'textile', 'mediawiki', 'docbook', 'epub', 'odt'
+    ];
+
+    if (!supportedFormats.includes(extension)) {
+        throw new Error(
+            `File format ".${extension}" is not supported.\n\n` +
+            `Supported formats:\n` +
+            `• PDF, DOCX, TXT\n` +
+            `• Markdown (MD), HTML, RTF\n` +
+            `• LaTeX (TEX), reStructuredText (RST)\n` +
+            `• Org-mode (ORG), Textile, MediaWiki\n` +
+            `• DocBook, EPUB, ODT\n\n` +
+            `Please convert your file to one of these formats and try again.`
+        );
+    }
+
+    try {
+        if (extension === 'pdf') {
+            return await extractPdf(file);
+        } else if (extension === 'docx') {
+            return await extractDocx(file);
+        } else if (extension === 'txt') {
+            return await file.text();
+        } else {
+            // Use pandoc for all other supported formats
+            return await extractWithPandoc(file);
+        }
+    } catch (error) {
+        console.error('[fileProcessor] Extraction error:', error);
+        throw new Error(
+            `Failed to extract text from ${file.name}.\n\n` +
+            `Error: ${error.message}\n\n` +
+            `The file may be corrupted or in an unsupported variant of the format.`
+        );
+    }
+};
+
+// Redact PII (Personally Identifiable Information)
 export const redactPII = (text) => {
     if (!text) return '';
 
     let redacted = text;
 
-    // Email Regex
-    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
-    redacted = redacted.replace(emailRegex, '***@***.***');
+    // Redact email addresses
+    redacted = redacted.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL REDACTED]');
 
-    // Phone Regex (Simple international/US format)
-    // Matches: +1-555-555-5555, 555-555-5555, (555) 555-5555
-    const phoneRegex = /(\+\d{1,3}[-.]?)?\(?\d{3}\)?[-.]?\d{3}[-.]?\d{4}/g;
-    redacted = redacted.replace(phoneRegex, '***-***-****');
-
-    // Add more PII patterns here if needed
+    // Redact phone numbers (various formats)
+    redacted = redacted.replace(/\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}/g, '[PHONE REDACTED]');
+    redacted = redacted.replace(/0\d{3}[-.\s]?\d{3}[-.\s]?\d{3}/g, '[PHONE REDACTED]');
 
     return redacted;
 };
