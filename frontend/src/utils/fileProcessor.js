@@ -162,9 +162,9 @@ export const redactPII = (text) => {
         });
     }
 
-    // Phone regex with variations (tel/tel./tel. mobil) and OCR spacing
+    // Phone regex with variations (tel/tel./tel. mobil/telefon) and OCR spacing
     // Handles: tel: 0712 345 678, tel. mobil: 0 7 1 2 3 4 5 6 7 8, etc.
-    const phoneWithLabelRegex = /\b((?:tel\.?\s*(?:mobil)?\s*:?\s*))(\+?\s*\d(?:\s*[\d\s.-]){8,15}\d)/gi;
+    const phoneWithLabelRegex = /\b((?:tel(?:efon)?\.?\s*(?:mobil)?\s*:?\s*))(\+?\s*\d(?:\s*[\d\s.-]){8,15}\d)/gi;
     while ((match = phoneWithLabelRegex.exec(text)) !== null) {
         const label = match[1];
         const phoneNumber = match[2];
@@ -213,7 +213,7 @@ export const redactPII = (text) => {
 
     // Romanian CNP (Cod Numeric Personal) - 13 digits with optional OCR spacing
     // Handles: CNP: 1234567890123 or CNP: 1 2 3 4 5 6 7 8 9 0 1 2 3
-    const cnpRegex = /\bCNP\s*:?\s*((?:\d\s*){12}\d)(?=\s|$|[^\d])/gi;
+    const cnpRegex = /\bCNP\s*:?\s*((?:\d\s*){12}\d)(?=\s|$|[^\d]|\.|,)/gi;
     while ((match = cnpRegex.exec(text)) !== null) {
         const cnpValue = match[1];
         const normalized = normalizeSpaces(cnpValue);
@@ -295,7 +295,7 @@ export const redactPII = (text) => {
 
     // "Subsemnat" pattern (subsemnatul/subsemnata followed by name)
     // Handles: Ion Popescu, Maria-Elena Ionescu, Ion C. Popescu, etc.
-    const subsemnatRegex = /\bsubsemnat(?:ul|a)\s+((?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.)(?:\s+(?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.))+)/g;
+    const subsemnatRegex = /\b[S|s]ubsemnat(?:ul|a)\s+((?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.)(?:[ \t]+(?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.))+)/g;
     while ((match = subsemnatRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -311,7 +311,7 @@ export const redactPII = (text) => {
 
     // "Numele și prenumele" combined pattern
     // Handles complex names with multiple parts and initials
-    const numelePrenumeleCombinedRegex = /\b(?:numele\s+și\s+prenumele|prenumele\s+și\s+numele)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*((?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.)(?:\s+(?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.))+)/gi;
+    const numelePrenumeleCombinedRegex = /\b(?:numele\s+și\s+prenumele|prenumele\s+și\s+numele)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*((?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.)(?:[ \t]+(?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.))+)/gi;
     while ((match = numelePrenumeleCombinedRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -327,7 +327,7 @@ export const redactPII = (text) => {
 
     // "Numele" (inflection) - but NOT if followed by "prenume" or "și prenume"
     // Handles: Popescu, Popescu-Ionescu, De La Cruz, etc.
-    const numeleRegex = /\b(?:numele)(?!\s+(?:și\s+)?prenume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:\s+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/gi;
+    const numeleRegex = /\b(?:numele)(?!\s+(?:și\s+)?prenume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/gi;
     while ((match = numeleRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -343,7 +343,7 @@ export const redactPII = (text) => {
 
     // "Prenumele" (inflection) - but NOT if followed by "nume" or "și nume"
     // Handles: Ion, Maria-Elena, Ion Vasile, etc.
-    const prenumeleRegex = /\b(?:prenumele)(?!\s+(?:și\s+)?nume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:\s+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/gi;
+    const prenumeleRegex = /\b(?:prenumele)(?!\s+(?:și\s+)?nume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/gi;
     while ((match = prenumeleRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -359,7 +359,7 @@ export const redactPII = (text) => {
 
     // "Nume de familie" - but NOT if followed by "și prenume" or just "prenume"
     // Handles: Popescu, Popescu-Ionescu, De La Cruz, etc.
-    const numeDefamilieRegex = /\b(?:Nume\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:\s+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
+    const numeDefamilieRegex = /\b(?:Nume\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
     while ((match = numeDefamilieRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -375,7 +375,7 @@ export const redactPII = (text) => {
 
     // "Nume" (simple) - but NOT if followed by "și Prenume" or just "Prenume"
     // Handles: Popescu, Popescu-Ionescu, De La Cruz, etc.
-    const numeSimpleRegex = /\b(?:Nume)(?!\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:\s+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
+    const numeSimpleRegex = /\b(?:Nume)(?!\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
     while ((match = numeSimpleRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -391,7 +391,7 @@ export const redactPII = (text) => {
 
     // "Prenume" (simple) - but NOT if followed by "și Nume" or just "Nume"
     // Handles: Ion, Maria-Elena, Ion Vasile Constantin, Ion C., etc.
-    const prenumeSimpleRegex = /\b(?:Prenume)(?!\s*:?\s*(?:și\s+)?[Nn]ume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:\s+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
+    const prenumeSimpleRegex = /\b(?:Prenume)(?!\s*:?\s*(?:și\s+)?[Nn]ume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
     while ((match = prenumeSimpleRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());

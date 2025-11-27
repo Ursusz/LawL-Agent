@@ -192,7 +192,8 @@ describe('fileProcessor', () => {
             // Check that all redactions are present
             expect(redactedText).toContain('[REDACTED]');
             expect(redactedText).toContain('[EMAIL REDACTED]');
-            expect(redactedText).toContain('[PHONE REDACTED]');
+            // Phone with label uses [REDACTED] format
+            expect(redactedText).toMatch(/Telefon:\s*\[REDACTED\]/);
 
             // Verify labels are preserved
             expect(redactedText).toContain('CNP:');
@@ -239,6 +240,9 @@ describe('fileProcessor', () => {
                 { input: 'Prenume: Ion Vasile Constantin', label: 'Prenume:' },
                 { input: 'Nume: De La Cruz', label: 'Nume:' },
                 { input: 'subsemnatul Ion C. Popescu', label: 'subsemnatul' },
+                { input: 'Subsemnatul Ion Popescu', label: 'Subsemnatul' },
+                { input: 'subsemnata Ioana Ca-Popescu', label: 'subsemnata' },
+                { input: 'Subsemnata Ana-Maria Popescu', label: 'Subsemnata' },
                 { input: 'Prenume: Ab C. De', label: 'Prenume:' },
                 { input: 'numele și prenumele: Popescu Ion Vasile', label: 'numele și prenumele:' }
             ];
