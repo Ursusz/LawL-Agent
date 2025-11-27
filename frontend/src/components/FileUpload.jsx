@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Cloud, X, Check, FileText, Edit2 } from 'lucide-react';
+import { Cloud, X, Check, FileText, Edit2, Shield, AlertTriangle } from 'lucide-react';
 import { extractContent, redactPII } from '../utils/fileProcessor';
 
 export default function FileUpload({ setLoading }) {
@@ -9,7 +9,9 @@ export default function FileUpload({ setLoading }) {
   const [reviewing, setReviewing] = useState(false);
   const [currentFile, setCurrentFile] = useState(null);
   const [extractedText, setExtractedText] = useState('');
+  const [redactedItems, setRedactedItems] = useState([]);
   const [originalFileName, setOriginalFileName] = useState('');
+  const textareaRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -55,11 +57,12 @@ export default function FileUpload({ setLoading }) {
       console.log('[FileUpload] Starting extraction');
 
       const text = await extractContent(file);
-      const redacted = redactPII(text);
-      console.log('[FileUpload] Extraction complete, text length:', redacted?.length);
+      const { redactedText, redactedItems: items } = redactPII(text);
+      console.log('[FileUpload] Extraction complete, text length:', redactedText?.length);
 
       setProcessing(false);
-      setExtractedText(redacted);
+      setExtractedText(redactedText);
+      setRedactedItems(items);
       setCurrentFile(file);
       setLoading(false);
 
@@ -113,8 +116,26 @@ export default function FileUpload({ setLoading }) {
   const handleCancelReview = () => {
     setReviewing(false);
     setExtractedText('');
+    setRedactedItems([]);
     setCurrentFile(null);
     setLoading(false);
+  };
+
+  const handleItemClick = (item) => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(item.start, item.end);
+
+      // Calculate scroll position to center the selection
+      // This is a simple approximation. For better accuracy, we might need more complex logic
+      // or rely on the browser's default behavior when focusing selection.
+      // However, setSelectionRange often scrolls into view automatically.
+
+      // Let's try blur and focus to force scroll if needed, though setSelectionRange usually works.
+      textareaRef.current.blur();
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(item.start, item.end);
+    }
   };
 
   console.log('[FileUpload] Render - reviewing:', reviewing, 'extractedText length:', extractedText?.length);
@@ -191,7 +212,7 @@ export default function FileUpload({ setLoading }) {
       {reviewing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
-            className="bg-white/10 border border-white/20 rounded-3xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl"
+            className="bg-white/10 border border-white/20 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl"
             style={{
               backdropFilter: 'blur(30px)',
               WebkitBackdropFilter: 'blur(30px)',
@@ -210,25 +231,55 @@ export default function FileUpload({ setLoading }) {
               </button>
             </div>
 
-            <div className="p-6 flex-1 overflow-hidden flex flex-col gap-4">
-              <div className="flex items-center justify-between text-sm text-white/60">
-                <span>Original File: {originalFileName}</span>
-                <span className="flex items-center gap-1 text-cyan-300">
-                  <Edit2 className="w-3 h-3" />
-                  Editable
-                </span>
+            <div className="flex-1 overflow-hidden flex gap-4 p-6">
+              <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+                <div className="flex items-center justify-between text-sm text-white/60">
+                  <span>Original File: {originalFileName}</span>
+                  <span className="flex items-center gap-1 text-cyan-300">
+                    <Edit2 className="w-3 h-3" />
+                    Editable
+                  </span>
+                </div>
+
+                <textarea
+                  ref={textareaRef}
+                  value={extractedText}
+                  onChange={(e) => setExtractedText(e.target.value)}
+                  className="w-full h-full bg-black/20 border border-white/10 rounded-xl p-4 text-white/90 font-mono text-sm resize-none focus:outline-none focus:border-cyan-300/50 transition-colors"
+                  placeholder="Extracted text will appear here..."
+                />
               </div>
 
-              <textarea
-                value={extractedText}
-                onChange={(e) => setExtractedText(e.target.value)}
-                className="w-full h-full min-h-[300px] bg-black/20 border border-white/10 rounded-xl p-4 text-white/90 font-mono text-sm resize-none focus:outline-none focus:border-cyan-300/50 transition-colors"
-                placeholder="Extracted text will appear here..."
-              />
+              {redactedItems.length > 0 && (
+                <div className="w-80 bg-black/20 border border-white/10 rounded-xl p-4 flex flex-col gap-3 overflow-hidden">
+                  <div className="flex items-center gap-2 text-amber-400 font-medium pb-2 border-b border-white/10">
+                    <Shield className="w-4 h-4" />
+                    <span>Redacted Items ({redactedItems.length})</span>
+                  </div>
 
-              <div className="text-xs text-white/40">
-                * Personal information (emails, phones) has been automatically redacted. Please verify before uploading.
-              </div>
+                  <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-2">
+                    {redactedItems.map((item, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleItemClick(item)}
+                        className="bg-white/5 rounded-lg p-3 text-xs border border-white/5 hover:border-cyan-300/50 hover:bg-white/10 transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-white/40 uppercase tracking-wider text-[10px] group-hover:text-cyan-300/70 transition-colors">{item.type}</span>
+                          <AlertTriangle className="w-3 h-3 text-amber-400/50 group-hover:text-amber-400 transition-colors" />
+                        </div>
+                        <div className="text-white/80 font-mono break-all group-hover:text-white transition-colors">
+                          {item.original}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 pb-2 text-xs text-white/40">
+              * Personal information (emails, phones) has been automatically redacted. Please verify before uploading.
             </div>
 
             <div className="p-6 border-t border-white/10 flex justify-end gap-4">

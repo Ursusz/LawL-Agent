@@ -134,17 +134,80 @@ export const extractContent = async (file) => {
 
 // Redact PII (Personally Identifiable Information)
 export const redactPII = (text) => {
-    if (!text) return '';
+    if (!text) return { redactedText: '', redactedItems: [] };
 
-    let redacted = text;
+    const matches = [];
 
-    // Redact email addresses
-    redacted = redacted.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL REDACTED]');
+    // Email regex
+    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    let match;
+    while ((match = emailRegex.exec(text)) !== null) {
+        matches.push({
+            type: 'Email',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: '[EMAIL REDACTED]'
+        });
+    }
 
-    // Redact phone numbers (10 or 11 digits, allowing common separators)
-    // This regex matches optional leading + and country code, then a sequence of digits totaling 10 or 11 digits.
-    // Allowed separators are spaces, dashes, periods, or parentheses. It deliberately excludes slashes to avoid redacting law numbers or dates.
-    redacted = redacted.replace(/(?<!\/)(?:\+?\d[\d .-]{8,13}\d)/g, '[PHONE REDACTED]');
+    // Phone regex
+    // Note: We need to be careful with the regex state if we reuse it, but here we define it fresh.
+    // The previous regex was: /(?<!\/)(?:\+?\d[\d .-]{8,13}\d)/g
+    const phoneRegex = /(?<!\/)(?:\+?\d[\d .-]{8,13}\d)/g;
+    while ((match = phoneRegex.exec(text)) !== null) {
+        matches.push({
+            type: 'Phone',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: '[PHONE REDACTED]'
+        });
+    }
 
-    return redacted;
+    // Sort matches by start index
+    matches.sort((a, b) => a.start - b.start);
+
+    // Filter out overlapping matches (simple strategy: keep first, skip if overlaps with previous)
+    const uniqueMatches = [];
+    let lastEnd = 0;
+    for (const m of matches) {
+        if (m.start >= lastEnd) {
+            uniqueMatches.push(m);
+            lastEnd = m.end;
+        }
+    }
+
+    // Reconstruct text and calculate new indices
+    let redactedText = '';
+    let currentIndex = 0;
+    const redactedItems = [];
+
+    for (const m of uniqueMatches) {
+        // Append text before match
+        redactedText += text.slice(currentIndex, m.start);
+
+        // Calculate new start index in redacted text
+        const newStart = redactedText.length;
+
+        // Append replacement
+        redactedText += m.replacement;
+
+        // Calculate new end index
+        const newEnd = redactedText.length;
+
+        redactedItems.push({
+            type: m.type,
+            original: m.original,
+            start: newStart,
+            end: newEnd
+        });
+
+        currentIndex = m.end;
+    }
+
+    // Append remaining text
+    redactedText += text.slice(currentIndex);
+
+    return { redactedText, redactedItems };
 };

@@ -23,45 +23,61 @@ describe('fileProcessor', () => {
     describe('redactPII', () => {
         it('should redact email addresses', () => {
             const text = 'Contact me at john.doe@example.com or jane@test.org';
-            const redacted = redactPII(text);
-            expect(redacted).toBe('Contact me at [EMAIL REDACTED] or [EMAIL REDACTED]');
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toBe('Contact me at [EMAIL REDACTED] or [EMAIL REDACTED]');
+            expect(redactedItems).toHaveLength(2);
+            expect(redactedItems[0]).toMatchObject({ type: 'Email', original: 'john.doe@example.com' });
+            expect(redactedItems[0].start).toBe(14); // 'Contact me at '.length
+            expect(redactedItems[1]).toMatchObject({ type: 'Email', original: 'jane@test.org' });
+            expect(redactedItems[1].start).toBe(14 + 16 + 4); // 14 + '[EMAIL REDACTED]'.length + ' or '.length
         });
-
-
 
         it('should redact phone numbers - Romanian format', () => {
             const text = 'My number is 0712 345 678 or 0723-456-789';
-            const redacted = redactPII(text);
-            expect(redacted).toBe('My number is [PHONE REDACTED] or [PHONE REDACTED]');
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toBe('My number is [PHONE REDACTED] or [PHONE REDACTED]');
+            expect(redactedItems).toHaveLength(2);
+            expect(redactedItems[0]).toMatchObject({ type: 'Phone', original: '0712 345 678' });
+            expect(redactedItems[1]).toMatchObject({ type: 'Phone', original: '0723-456-789' });
         });
 
         it('should handle empty text', () => {
-            expect(redactPII('')).toBe('');
-            expect(redactPII(null)).toBe('');
-            expect(redactPII(undefined)).toBe('');
+            expect(redactPII('').redactedText).toBe('');
+            expect(redactPII(null).redactedText).toBe('');
+            expect(redactPII(undefined).redactedText).toBe('');
         });
 
         it('should redact multiple PII instances in one text', () => {
             const text = 'Email: test@example.com, Phone: 0712 345 678, Another: admin@site.ro';
-            const redacted = redactPII(text);
-            expect(redacted).toContain('[EMAIL REDACTED]');
-            expect(redacted).toContain('[PHONE REDACTED]');
-            expect(redacted).not.toContain('test@example.com');
-            expect(redacted).not.toContain('+40 712 345 678');
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toContain('[EMAIL REDACTED]');
+            expect(redactedText).toContain('[PHONE REDACTED]');
+            expect(redactedItems).toHaveLength(3);
+
+            // Verify order and indices
+            expect(redactedItems[0].type).toBe('Email');
+            expect(redactedItems[1].type).toBe('Phone');
+            expect(redactedItems[2].type).toBe('Email');
+
+            // Check that indices are increasing
+            expect(redactedItems[1].start).toBeGreaterThan(redactedItems[0].end);
+            expect(redactedItems[2].start).toBeGreaterThan(redactedItems[1].end);
         });
 
         it('should preserve non-PII content', () => {
             const text = 'This is a normal sentence with numbers like 123 and words.';
-            const redacted = redactPII(text);
-            expect(redacted).toBe(text);
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toBe(text);
+            expect(redactedItems).toHaveLength(0);
         });
 
         it('should handle complex email formats', () => {
             const text = 'Emails: first.last+tag@sub.domain.com, user_123@test.co.uk';
-            const redacted = redactPII(text);
-            expect(redacted).not.toContain('first.last+tag@sub.domain.com');
-            expect(redacted).not.toContain('user_123@test.co.uk');
-            expect(redacted).toContain('[EMAIL REDACTED]');
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).not.toContain('first.last+tag@sub.domain.com');
+            expect(redactedText).not.toContain('user_123@test.co.uk');
+            expect(redactedText).toContain('[EMAIL REDACTED]');
+            expect(redactedItems).toHaveLength(2);
         });
 
         it('should not redact law references', () => {
@@ -86,8 +102,8 @@ describe('fileProcessor', () => {
                 "OM nr. 4139/29.06.2022"
             ];
             texts.forEach(t => {
-                const redacted = redactPII(t);
-                expect(redacted).toBe(t);
+                const { redactedText } = redactPII(t);
+                expect(redactedText).toBe(t);
             });
         });
 
