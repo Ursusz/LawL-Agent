@@ -107,6 +107,98 @@ describe('fileProcessor', () => {
             });
         });
 
+        it('should NOT redact dates as phone numbers', () => {
+            const texts = [
+                "Date: 28.02.2025",
+                "Deadline: 31.12.2024",
+                "Born on 15.03.1990",
+                "ISO date: 2025-11-28",
+                "Another date: 2024-01-15"
+            ];
+            texts.forEach(t => {
+                const { redactedText, redactedItems } = redactPII(t);
+                expect(redactedText).toBe(t);
+                expect(redactedItems).toHaveLength(0);
+            });
+        });
+
+        it('should NOT redact year ranges or reference numbers as phone numbers', () => {
+            const texts = [
+                "Reference: 2025-22801",
+                "Case number: 2024-12345",
+                "Document: 2023-98765"
+            ];
+            texts.forEach(t => {
+                const { redactedText, redactedItems } = redactPII(t);
+                expect(redactedText).toBe(t);
+                expect(redactedItems).toHaveLength(0);
+            });
+        });
+
+        it('should redact Romanian CNP', () => {
+            const text = 'CNP: 1234567890123 and another CNP 9876543210987';
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toBe('CNP: [REDACTED] and another CNP [REDACTED]');
+            expect(redactedItems).toHaveLength(2);
+            expect(redactedItems[0]).toMatchObject({ type: 'CNP', original: 'CNP: 1234567890123' });
+            expect(redactedItems[1]).toMatchObject({ type: 'CNP', original: 'CNP 9876543210987' });
+        });
+
+        it('should redact Romanian last names (Nume)', () => {
+            const text = 'Nume: Popescu and Nume de familie: Ionescu-Marin';
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toBe('Nume: [REDACTED] and Nume de familie: [REDACTED]');
+            expect(redactedItems).toHaveLength(2);
+            expect(redactedItems[0]).toMatchObject({ type: 'Last Name', original: 'Nume: Popescu' });
+            expect(redactedItems[1]).toMatchObject({ type: 'Last Name', original: 'Nume de familie: Ionescu-Marin' });
+        });
+
+        it('should redact Romanian first names (Prenume)', () => {
+            const text = 'Prenume: Ion and Prenume: Maria-Elena';
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toBe('Prenume: [REDACTED] and Prenume: [REDACTED]');
+            expect(redactedItems).toHaveLength(2);
+            expect(redactedItems[0]).toMatchObject({ type: 'First Name', original: 'Prenume: Ion' });
+            expect(redactedItems[1]).toMatchObject({ type: 'First Name', original: 'Prenume: Maria-Elena' });
+        });
+
+        it('should handle Romanian characters in names', () => {
+            const text = 'Nume: Ștefănescu, Prenume: Ștefan, Nume de familie: Țăran';
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toContain('[REDACTED]');
+            expect(redactedItems).toHaveLength(3);
+            expect(redactedItems[0].original).toBe('Nume: Ștefănescu');
+            expect(redactedItems[1].original).toBe('Prenume: Ștefan');
+            expect(redactedItems[2].original).toBe('Nume de familie: Țăran');
+        });
+
+        it('should redact all PII types in a complex Romanian document', () => {
+            const text = `
+                Nume de familie: Popescu
+                Prenume: Ion
+                CNP: 1234567890123
+                Email: ion.popescu@example.com
+                Telefon: 0712 345 678
+            `;
+            const { redactedText, redactedItems } = redactPII(text);
+
+            expect(redactedItems).toHaveLength(5);
+            expect(redactedItems.some(item => item.type === 'Last Name')).toBe(true);
+            expect(redactedItems.some(item => item.type === 'First Name')).toBe(true);
+            expect(redactedItems.some(item => item.type === 'CNP')).toBe(true);
+            expect(redactedItems.some(item => item.type === 'Email')).toBe(true);
+            expect(redactedItems.some(item => item.type === 'Phone')).toBe(true);
+
+            // Check that all redactions are present
+            expect(redactedText).toContain('[REDACTED]');
+            expect(redactedText).toContain('[EMAIL REDACTED]');
+            expect(redactedText).toContain('[PHONE REDACTED]');
+
+            // Verify labels are preserved
+            expect(redactedText).toContain('CNP:');
+            expect(redactedText).toContain('Nume de familie:');
+            expect(redactedText).toContain('Prenume:');
+        });
 
     });
 

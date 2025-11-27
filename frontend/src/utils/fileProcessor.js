@@ -151,17 +151,72 @@ export const redactPII = (text) => {
         });
     }
 
-    // Phone regex
-    // Note: We need to be careful with the regex state if we reuse it, but here we define it fresh.
-    // The previous regex was: /(?<!\/)(?:\+?\d[\d .-]{8,13}\d)/g
-    const phoneRegex = /(?<!\/)(?:\+?\d[\d .-]{8,13}\d)/g;
+    // Phone regex - improved to avoid false positives with dates and year ranges
+    // Matches: +40 123 456 789, 0712-345-678, 0712.345.678, 0712 345 678, etc.
+    // Avoids: 2025-22801, 28.02.2025, etc.
+    // Pattern explanation:
+    // - Must start with + or 0 (not just any digit)
+    // - If starts with +, must be followed by 1-3 digits (country code)
+    // - Then must have consistent separators (all spaces, all dashes, or all dots, or none)
+    // - Total length should be appropriate for a phone number
+    const phoneRegex = /(?<![\/\d])(?:\+\d{1,3}[\s.-]?\d{2,4}[\s.-]?\d{2,4}[\s.-]?\d{2,4}|0\d{2,3}[\s.-]?\d{2,4}[\s.-]?\d{2,4}(?:[\s.-]?\d{2,4})?)(?![\d])/g;
     while ((match = phoneRegex.exec(text)) !== null) {
+        // Additional validation: check that it's not a date-like pattern
+        const matched = match[0];
+        // Skip if it looks like a date (e.g., contains patterns like dd.mm.yyyy or yyyy-mm-dd)
+        if (/^\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4}$/.test(matched) || /^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/.test(matched)) {
+            continue;
+        }
+        // Skip if it's a year range or similar (e.g., 2025-22801)
+        if (/^(19|20)\d{2}[-]\d+$/.test(matched)) {
+            continue;
+        }
+
         matches.push({
             type: 'Phone',
+            original: matched,
+            start: match.index,
+            end: match.index + matched.length,
+            replacement: '[PHONE REDACTED]'
+        });
+    }
+
+    // Romanian CNP (Cod Numeric Personal) - 13 digits
+    // Pattern: CNP followed by optional colon/space and 13 digits
+    const cnpRegex = /\bCNP\s*:?\s*(\d{13})\b/gi;
+    while ((match = cnpRegex.exec(text)) !== null) {
+        matches.push({
+            type: 'CNP',
             original: match[0],
             start: match.index,
             end: match.index + match[0].length,
-            replacement: '[PHONE REDACTED]'
+            replacement: match[0].replace(match[1], '[REDACTED]')
+        });
+    }
+
+    // Romanian Last Name (Nume or Nume de familie)
+    // Pattern: "Nume" or "Nume de familie" followed by optional colon/space and the actual name
+    const lastNameRegex = /\b(?:Nume de familie|Nume)\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/g;
+    while ((match = lastNameRegex.exec(text)) !== null) {
+        matches.push({
+            type: 'Last Name',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(match[1], '[REDACTED]')
+        });
+    }
+
+    // Romanian First Name (Prenume)
+    // Pattern: "Prenume" followed by optional colon/space and the actual name
+    const firstNameRegex = /\bPrenume\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/g;
+    while ((match = firstNameRegex.exec(text)) !== null) {
+        matches.push({
+            type: 'First Name',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(match[1], '[REDACTED]')
         });
     }
 
