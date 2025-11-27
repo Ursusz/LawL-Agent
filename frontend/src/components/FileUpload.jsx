@@ -128,7 +128,7 @@ export default function FileUpload({ setLoading }) {
     const oldText = previousText;
 
     // Find where the change occurred
-    let editPosition = 0;
+    let editPosition = -1;
     const minLength = Math.min(oldText.length, newText.length);
 
     // Find first difference
@@ -140,7 +140,7 @@ export default function FileUpload({ setLoading }) {
     }
 
     // If no difference found in common part, edit is at the end
-    if (editPosition === 0 && oldText.length !== newText.length) {
+    if (editPosition === -1) {
       editPosition = minLength;
     }
 
@@ -161,7 +161,8 @@ export default function FileUpload({ setLoading }) {
     const currentText = extractedText;
     const isRedacted = item.isRedacted !== false; // Default to true
 
-    const redactionMarker = item.type === 'Email' ? '[EMAIL REDACTED]' : '[PHONE REDACTED]';
+    // Use the stored replacement if available, otherwise fallback based on type
+    const redactionMarker = item.replacement || (item.type === 'Email' ? '[EMAIL REDACTED]' : '[PHONE REDACTED]');
 
     if (isRedacted) {
       // Undo: Replace marker with original
