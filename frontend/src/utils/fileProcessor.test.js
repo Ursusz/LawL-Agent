@@ -232,6 +232,25 @@ describe('fileProcessor', () => {
             expect(redactedItems[0].type).toBe('Name');
         });
 
+        it('should redact complex multi-part names', () => {
+            const tests = [
+                { input: 'Nume: Popescu-Ionescu', label: 'Nume:' },
+                { input: 'Prenume: Maria-Elena', label: 'Prenume:' },
+                { input: 'Prenume: Ion Vasile Constantin', label: 'Prenume:' },
+                { input: 'Nume: De La Cruz', label: 'Nume:' },
+                { input: 'subsemnatul Ion C. Popescu', label: 'subsemnatul' },
+                { input: 'Prenume: Ab C. De', label: 'Prenume:' },
+                { input: 'numele și prenumele: Popescu Ion Vasile', label: 'numele și prenumele:' }
+            ];
+
+            tests.forEach(({ input, label }) => {
+                const { redactedText, redactedItems } = redactPII(input);
+                expect(redactedText).toContain('[REDACTED]');
+                expect(redactedText).toContain(label);
+                expect(redactedItems.length).toBeGreaterThan(0);
+            });
+        });
+
         it('should redact identity card seria', () => {
             const text = 'seria: XX, nr: 123456';
             const { redactedText, redactedItems } = redactPII(text);
