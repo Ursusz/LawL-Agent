@@ -211,3 +211,56 @@ export const redactPII = (text) => {
 
     return { redactedText, redactedItems };
 };
+
+// Adjust redaction positions after text edits
+// editPosition: where the edit occurred in the text
+// offset: positive for insertions, negative for deletions
+// redactedItems: current array of redacted items
+export const adjustRedactionPositions = (redactedItems, editPosition, offset) => {
+    if (!redactedItems || redactedItems.length === 0 || offset === 0) {
+        return redactedItems;
+    }
+
+    return redactedItems
+        .map(item => {
+            // If edit is completely after this redaction, no change needed
+            if (editPosition >= item.end) {
+                return item;
+            }
+
+            // If edit is completely before this redaction, shift both start and end
+            if (editPosition <= item.start) {
+                const newStart = item.start + offset;
+                const newEnd = item.end + offset;
+
+                // If deletion causes negative positions, mark as invalid
+                if (newStart < 0 || newEnd < 0) {
+                    return null;
+                }
+
+                return {
+                    ...item,
+                    start: newStart,
+                    end: newEnd
+                };
+            }
+
+            // Edit is within the redaction - adjust only the end
+            if (editPosition > item.start && editPosition < item.end) {
+                const newEnd = item.end + offset;
+
+                // If deletion causes end to be before start, mark as invalid
+                if (newEnd <= item.start) {
+                    return null;
+                }
+
+                return {
+                    ...item,
+                    end: newEnd
+                };
+            }
+
+            return item;
+        })
+        .filter(item => item !== null); // Remove invalid items
+};

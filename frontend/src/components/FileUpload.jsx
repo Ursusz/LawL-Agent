@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Cloud, X, Check, FileText, Edit2, Shield, AlertTriangle } from 'lucide-react';
-import { extractContent, redactPII } from '../utils/fileProcessor';
+import { Cloud, X, Check, FileText, Edit2, Shield, AlertTriangle, RotateCcw, Trash2, Redo } from 'lucide-react';
+import { extractContent, redactPII, adjustRedactionPositions } from '../utils/fileProcessor';
 
 export default function FileUpload({ setLoading }) {
   const [dragActive, setDragActive] = useState(false);
@@ -11,6 +11,8 @@ export default function FileUpload({ setLoading }) {
   const [extractedText, setExtractedText] = useState('');
   const [redactedItems, setRedactedItems] = useState([]);
   const [originalFileName, setOriginalFileName] = useState('');
+  const [previousText, setPreviousText] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(null);
   const textareaRef = useRef(null);
 
   const navigate = useNavigate();
@@ -119,6 +121,126 @@ export default function FileUpload({ setLoading }) {
     setRedactedItems([]);
     setCurrentFile(null);
     setLoading(false);
+  };
+
+  const handleTextChange = (e) => {
+    const newText = e.target.value;
+    const oldText = previousText;
+
+    // Find where the change occurred
+    let editPosition = 0;
+    const minLength = Math.min(oldText.length, newText.length);
+
+    // Find first difference
+    for (let i = 0; i < minLength; i++) {
+      if (oldText[i] !== newText[i]) {
+        editPosition = i;
+        break;
+      }
+    }
+
+    // If no difference found in common part, edit is at the end
+    if (editPosition === 0 && oldText.length !== newText.length) {
+      editPosition = minLength;
+    }
+
+    // Calculate offset
+    const offset = newText.length - oldText.length;
+
+    // Adjust redaction positions
+    const updatedItems = adjustRedactionPositions(redactedItems, editPosition, offset);
+
+    setExtractedText(newText);
+    setPreviousText(newText);
+    setRedactedItems(updatedItems);
+  };
+
+  const handleUndoRedaction = (index, e) => {
+    e.stopPropagation();
+    const item = redactedItems[index];
+    const currentText = extractedText;
+    const isRedacted = item.isRedacted !== false; // Default to true
+
+    const redactionMarker = item.type === 'Email' ? '[EMAIL REDACTED]' : '[PHONE REDACTED]';
+
+    if (isRedacted) {
+      // Undo: Replace marker with original
+      const newText = currentText.slice(0, item.start) + item.original + currentText.slice(item.end);
+      const offset = item.original.length - redactionMarker.length;
+
+      const updatedItems = redactedItems.map((otherItem, i) => {
+        if (i === index) {
+          return { ...otherItem, isRedacted: false, end: otherItem.start + item.original.length };
+        }
+        if (otherItem.start >= item.end) {
+          return { ...otherItem, start: otherItem.start + offset, end: otherItem.end + offset };
+        }
+        return otherItem;
+      });
+
+      setExtractedText(newText);
+      setPreviousText(newText);
+      setRedactedItems(updatedItems);
+    } else {
+      // Redo: Replace original with marker
+      const newText = currentText.slice(0, item.start) + redactionMarker + currentText.slice(item.end);
+      const offset = redactionMarker.length - item.original.length;
+
+      const updatedItems = redactedItems.map((otherItem, i) => {
+        if (i === index) {
+          return { ...otherItem, isRedacted: true, end: otherItem.start + redactionMarker.length };
+        }
+        if (otherItem.start >= item.end) {
+          return { ...otherItem, start: otherItem.start + offset, end: otherItem.end + offset };
+        }
+        return otherItem;
+      });
+
+      setExtractedText(newText);
+      setPreviousText(newText);
+      setRedactedItems(updatedItems);
+    }
+  };
+
+  const handleRemoveRedaction = (index, e) => {
+    e.stopPropagation();
+    const item = redactedItems[index];
+    setConfirmRemove({ index, item });
+  };
+
+  const cancelRemoveRedaction = (e) => {
+    e.stopPropagation();
+    setConfirmRemove(null);
+  };
+
+  const confirmRemoveRedaction = (e) => {
+    e.stopPropagation();
+    if (!confirmRemove) return;
+
+    const { index, item } = confirmRemove;
+    const isRedacted = item.isRedacted !== false;
+    const currentText = extractedText;
+    let newText = currentText;
+    let offset = 0;
+
+    if (isRedacted) {
+      newText = currentText.slice(0, item.start) + item.original + currentText.slice(item.end);
+      offset = item.original.length - (item.end - item.start);
+    }
+
+    const updatedItems = redactedItems
+      .filter((_, i) => i !== index)
+      .map(otherItem => {
+        if (otherItem.start >= item.end) {
+          return { ...otherItem, start: otherItem.start + offset, end: otherItem.end + offset };
+        }
+        return otherItem;
+      });
+
+    setExtractedText(newText);
+    setPreviousText(newText);
+    setRedactedItems(updatedItems);
+    setConfirmRemove(null);
   };
 
   const handleItemClick = (item) => {
@@ -244,7 +366,7 @@ export default function FileUpload({ setLoading }) {
                 <textarea
                   ref={textareaRef}
                   value={extractedText}
-                  onChange={(e) => setExtractedText(e.target.value)}
+                  onChange={handleTextChange}
                   className="w-full h-full bg-black/20 border border-white/10 rounded-xl p-4 text-white/90 font-mono text-sm resize-none focus:outline-none focus:border-cyan-300/50 transition-colors"
                   placeholder="Extracted text will appear here..."
                 />
@@ -268,8 +390,54 @@ export default function FileUpload({ setLoading }) {
                           <span className="text-white/40 uppercase tracking-wider text-[10px] group-hover:text-cyan-300/70 transition-colors">{item.type}</span>
                           <AlertTriangle className="w-3 h-3 text-amber-400/50 group-hover:text-amber-400 transition-colors" />
                         </div>
-                        <div className="text-white/80 font-mono break-all group-hover:text-white transition-colors">
+                        <div className="text-white/80 font-mono break-all group-hover:text-white transition-colors mb-2">
                           {item.original}
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={(e) => handleUndoRedaction(index, e)}
+                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/50 text-white/60 hover:text-blue-400 transition-all text-[10px]"
+                            title={item.isRedacted !== false ? "Restore original text" : "Redact again"}
+                          >
+                            {item.isRedacted !== false ? (
+                              <>
+                                <RotateCcw className="w-3 h-3" />
+                                <span>Undo</span>
+                              </>
+                            ) : (
+                              <>
+                                <Redo className="w-3 h-3" />
+                                <span>Redo</span>
+                              </>
+                            )}
+                          </button>
+                          {confirmRemove?.index === index ? (
+                            <div className="flex-1 flex gap-1 animate-in fade-in duration-200">
+                              <button
+                                onClick={confirmRemoveRedaction}
+                                className="flex-1 flex items-center justify-center p-1 rounded bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 transition-all"
+                                title="Confirm remove"
+                              >
+                                <Check className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={cancelRemoveRedaction}
+                                className="flex-1 flex items-center justify-center p-1 rounded bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition-all"
+                                title="Cancel"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => handleRemoveRedaction(index, e)}
+                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-white/60 hover:text-red-400 transition-all text-[10px]"
+                              title="Permanently remove"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Remove</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}

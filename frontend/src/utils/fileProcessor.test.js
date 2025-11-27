@@ -109,4 +109,92 @@ describe('fileProcessor', () => {
 
 
     });
+
+    describe('adjustRedactionPositions', () => {
+        const { adjustRedactionPositions } = require('./fileProcessor');
+
+        it('should shift positions forward when text is inserted before redaction', () => {
+            const items = [
+                { type: 'Email', original: 'test@example.com', start: 10, end: 26 }
+            ];
+            const result = adjustRedactionPositions(items, 5, 3); // Insert 3 chars at position 5
+            expect(result[0].start).toBe(13);
+            expect(result[0].end).toBe(29);
+        });
+
+        it('should not change positions when text is inserted after redaction', () => {
+            const items = [
+                { type: 'Email', original: 'test@example.com', start: 10, end: 26 }
+            ];
+            const result = adjustRedactionPositions(items, 30, 5); // Insert 5 chars at position 30
+            expect(result[0].start).toBe(10);
+            expect(result[0].end).toBe(26);
+        });
+
+        it('should expand redaction when text is inserted within it', () => {
+            const items = [
+                { type: 'Email', original: 'test@example.com', start: 10, end: 26 }
+            ];
+            const result = adjustRedactionPositions(items, 15, 3); // Insert 3 chars at position 15
+            expect(result[0].start).toBe(10);
+            expect(result[0].end).toBe(29); // End expands by 3
+        });
+
+        it('should shift positions backward when text is deleted before redaction', () => {
+            const items = [
+                { type: 'Email', original: 'test@example.com', start: 20, end: 36 }
+            ];
+            const result = adjustRedactionPositions(items, 5, -3); // Delete 3 chars at position 5
+            expect(result[0].start).toBe(17);
+            expect(result[0].end).toBe(33);
+        });
+
+        it('should remove redaction when it is completely deleted', () => {
+            const items = [
+                { type: 'Email', original: 'test@example.com', start: 10, end: 26 }
+            ];
+            const result = adjustRedactionPositions(items, 12, -20); // Delete 20 chars at position 12
+            expect(result).toHaveLength(0); // Item should be removed
+        });
+
+        it('should handle multiple redactions with edit in middle', () => {
+            const items = [
+                { type: 'Email', original: 'first@example.com', start: 10, end: 27 },
+                { type: 'Phone', original: '0712345678', start: 40, end: 50 },
+                { type: 'Email', original: 'second@example.com', start: 60, end: 78 }
+            ];
+            const result = adjustRedactionPositions(items, 35, 5); // Insert 5 chars at position 35
+
+            // First item should be unchanged (edit is after it)
+            expect(result[0].start).toBe(10);
+            expect(result[0].end).toBe(27);
+
+            // Second and third items should shift forward
+            expect(result[1].start).toBe(45);
+            expect(result[1].end).toBe(55);
+            expect(result[2].start).toBe(65);
+            expect(result[2].end).toBe(83);
+        });
+
+        it('should return same items when offset is 0', () => {
+            const items = [
+                { type: 'Email', original: 'test@example.com', start: 10, end: 26 }
+            ];
+            const result = adjustRedactionPositions(items, 15, 0);
+            expect(result).toEqual(items);
+        });
+
+        it('should handle empty items array', () => {
+            const result = adjustRedactionPositions([], 10, 5);
+            expect(result).toEqual([]);
+        });
+
+        it('should remove items with negative positions after deletion', () => {
+            const items = [
+                { type: 'Email', original: 'test@example.com', start: 5, end: 21 }
+            ];
+            const result = adjustRedactionPositions(items, 0, -10); // Delete 10 chars at start
+            expect(result).toHaveLength(0); // Item should be removed (negative start)
+        });
+    });
 });
