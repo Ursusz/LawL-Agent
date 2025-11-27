@@ -24,18 +24,18 @@ describe('fileProcessor', () => {
         it('should redact email addresses', () => {
             const text = 'Contact me at john.doe@example.com or jane@test.org';
             const { redactedText, redactedItems } = redactPII(text);
-            expect(redactedText).toBe('Contact me at [EMAIL REDACTED] or [EMAIL REDACTED]');
+            expect(redactedText).toBe('Contact me at [REDACTED] or [REDACTED]');
             expect(redactedItems).toHaveLength(2);
             expect(redactedItems[0]).toMatchObject({ type: 'Email', original: 'john.doe@example.com' });
             expect(redactedItems[0].start).toBe(14); // 'Contact me at '.length
             expect(redactedItems[1]).toMatchObject({ type: 'Email', original: 'jane@test.org' });
-            expect(redactedItems[1].start).toBe(14 + 16 + 4); // 14 + '[EMAIL REDACTED]'.length + ' or '.length
+            expect(redactedItems[1].start).toBe(14 + 10 + 4); // 14 + '[REDACTED]'.length + ' or '.length
         });
 
         it('should redact phone numbers - Romanian format', () => {
             const text = 'My number is 0712 345 678 or 0723-456-789';
             const { redactedText, redactedItems } = redactPII(text);
-            expect(redactedText).toBe('My number is [PHONE REDACTED] or [PHONE REDACTED]');
+            expect(redactedText).toBe('My number is [REDACTED] or [REDACTED]');
             expect(redactedItems).toHaveLength(2);
             expect(redactedItems[0]).toMatchObject({ type: 'Phone', original: '0712 345 678' });
             expect(redactedItems[1]).toMatchObject({ type: 'Phone', original: '0723-456-789' });
@@ -50,8 +50,8 @@ describe('fileProcessor', () => {
         it('should redact multiple PII instances in one text', () => {
             const text = 'Email: test@example.com, Phone: 0712 345 678, Another: admin@site.ro';
             const { redactedText, redactedItems } = redactPII(text);
-            expect(redactedText).toContain('[EMAIL REDACTED]');
-            expect(redactedText).toContain('[PHONE REDACTED]');
+            expect(redactedText).toContain('[REDACTED]');
+            expect(redactedText).not.toContain('test@example.com');
             expect(redactedItems).toHaveLength(3);
 
             // Verify order and indices
@@ -76,7 +76,7 @@ describe('fileProcessor', () => {
             const { redactedText, redactedItems } = redactPII(text);
             expect(redactedText).not.toContain('first.last+tag@sub.domain.com');
             expect(redactedText).not.toContain('user_123@test.co.uk');
-            expect(redactedText).toContain('[EMAIL REDACTED]');
+            expect(redactedText).toContain('[REDACTED]');
             expect(redactedItems).toHaveLength(2);
         });
 
@@ -191,7 +191,6 @@ describe('fileProcessor', () => {
 
             // Check that all redactions are present
             expect(redactedText).toContain('[REDACTED]');
-            expect(redactedText).toContain('[EMAIL REDACTED]');
             // Phone with label uses [REDACTED] format
             expect(redactedText).toMatch(/Telefon:\s*\[REDACTED\]/);
 
@@ -342,7 +341,7 @@ describe('fileProcessor', () => {
             // Should have both the original and the repeated redaction
             expect(redactedItems.some(item => item.type === 'Last Name')).toBe(true);
             expect(redactedItems.some(item => item.type === 'Repeated Name')).toBe(true);
-            expect(redactedText).toContain('[REPEATED NAME REDACTED]');
+            expect(redactedText).toContain('[REDACTED]');
         });
 
         it('should detect and redact repeated CNP', () => {
@@ -354,7 +353,7 @@ describe('fileProcessor', () => {
 
             expect(redactedItems.some(item => item.type === 'CNP')).toBe(true);
             expect(redactedItems.some(item => item.type === 'Repeated CNP')).toBe(true);
-            expect(redactedText).toContain('[REPEATED CNP REDACTED]');
+            expect(redactedText).toContain('[REDACTED]');
         });
 
         it('should handle complex identity document with all fields', () => {
@@ -381,7 +380,6 @@ describe('fileProcessor', () => {
 
             // Verify redactions are applied
             expect(redactedText).toContain('[REDACTED]');
-            expect(redactedText).toContain('[EMAIL REDACTED]');
             // Phone with label uses [REDACTED] format
             expect(redactedText).toMatch(/Tel\.?\s*mobil:\s*\[REDACTED\]/);
         });

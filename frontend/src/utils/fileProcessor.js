@@ -158,7 +158,7 @@ export const redactPII = (text) => {
             original: match[0],
             start: match.index,
             end: match.index + match[0].length,
-            replacement: '[EMAIL REDACTED]'
+            replacement: '[REDACTED]'
         });
     }
 
@@ -207,7 +207,7 @@ export const redactPII = (text) => {
             original: matched,
             start: match.index,
             end: match.index + matched.length,
-            replacement: '[PHONE REDACTED]'
+            replacement: '[REDACTED]'
         });
     }
 
@@ -432,7 +432,7 @@ export const redactPII = (text) => {
                     original: repeatMatch[0],
                     start: matchIndex,
                     end: matchEnd,
-                    replacement: '[REPEATED NAME REDACTED]'
+                    replacement: '[REDACTED]'
                 });
             }
         }
@@ -460,7 +460,7 @@ export const redactPII = (text) => {
                     original: repeatMatch[0],
                     start: matchIndex,
                     end: matchEnd,
-                    replacement: '[REPEATED CNP REDACTED]'
+                    replacement: '[REDACTED]'
                 });
             }
         }
