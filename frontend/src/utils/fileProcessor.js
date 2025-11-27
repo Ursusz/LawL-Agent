@@ -171,7 +171,7 @@ export const redactPII = (text) => {
         const normalized = normalizeSpaces(phoneNumber);
 
         // Validate it's a reasonable phone number after normalization
-        if (/^[\+\d][\d.-]{7,14}\d$/.test(normalized)) {
+        if (/^[+\d][\d.-]{7,14}\d$/.test(normalized)) {
             matches.push({
                 type: 'Phone',
                 original: match[0],
@@ -190,7 +190,7 @@ export const redactPII = (text) => {
         const normalized = normalizeSpaces(matched);
 
         // Skip if it looks like a date after normalization
-        if (/^\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4}$/.test(normalized) || /^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/.test(normalized)) {
+        if (/^\d{1,2}[./]\d{1,2}[./]\d{2,4}$/.test(normalized) || /^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(normalized)) {
             continue;
         }
         // Skip if it's a year range
@@ -279,7 +279,7 @@ export const redactPII = (text) => {
 
     // Data nașterii (birth date) - only redact dates in this context
     // Handles OCR spacing: 2 8 . 0 2 . 1 9 9 0
-    const birthDateRegex = /\b(?:data\s+nașterii|născut(?:ă)?\s+la)\s*:?\s*((?:\d\s*){1,2}\s*[.\/\s-]\s*(?:\d\s*){1,2}\s*[.\/\s-]\s*(?:\d\s*){2,4})/gi;
+    const birthDateRegex = /\b(?:data\s+nașterii|născut(?:ă)?\s+la)\s*:?\s*((?:\d\s*){1,2}\s*[./\s-]\s*(?:\d\s*){1,2}\s*[./\s-]\s*(?:\d\s*){2,4})/gi;
     while ((match = birthDateRegex.exec(text)) !== null) {
         matches.push({
             type: 'Birth Date',
@@ -417,18 +417,21 @@ export const redactPII = (text) => {
         let repeatMatch;
 
         while ((repeatMatch = nameRegex.exec(text)) !== null) {
+            const matchIndex = repeatMatch.index;
+            const matchEnd = matchIndex + repeatMatch[0].length;
+
             // Check if this overlaps with any existing match
             const overlaps = matches.some(m =>
-                (repeatMatch.index >= m.start && repeatMatch.index < m.end) ||
-                (m.start >= repeatMatch.index && m.start < repeatMatch.index + repeatMatch[0].length)
+                (matchIndex >= m.start && matchIndex < m.end) ||
+                (m.start >= matchIndex && m.start < matchEnd)
             );
 
             if (!overlaps) {
                 matches.push({
                     type: 'Repeated Name',
                     original: repeatMatch[0],
-                    start: repeatMatch.index,
-                    end: repeatMatch.index + repeatMatch[0].length,
+                    start: matchIndex,
+                    end: matchEnd,
                     replacement: '[REPEATED NAME REDACTED]'
                 });
             }
@@ -442,18 +445,21 @@ export const redactPII = (text) => {
         let repeatMatch;
 
         while ((repeatMatch = cnpRegexRepeat.exec(text)) !== null) {
+            const matchIndex = repeatMatch.index;
+            const matchEnd = matchIndex + repeatMatch[0].length;
+
             // Check if this overlaps with any existing match
             const overlaps = matches.some(m =>
-                (repeatMatch.index >= m.start && repeatMatch.index < m.end) ||
-                (m.start >= repeatMatch.index && m.start < repeatMatch.index + repeatMatch[0].length)
+                (matchIndex >= m.start && matchIndex < m.end) ||
+                (m.start >= matchIndex && m.start < matchEnd)
             );
 
             if (!overlaps) {
                 matches.push({
                     type: 'Repeated CNP',
                     original: repeatMatch[0],
-                    start: repeatMatch.index,
-                    end: repeatMatch.index + repeatMatch[0].length,
+                    start: matchIndex,
+                    end: matchEnd,
                     replacement: '[REPEATED CNP REDACTED]'
                 });
             }
