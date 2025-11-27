@@ -334,7 +334,7 @@ export default function FileUpload({ setLoading }) {
       {reviewing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
-            className="bg-white/10 border border-white/20 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl"
+            className="bg-white/10 border border-white/20 rounded-3xl w-full max-w-5xl h-[85vh] flex flex-col shadow-2xl"
             style={{
               backdropFilter: 'blur(30px)',
               WebkitBackdropFilter: 'blur(30px)',
