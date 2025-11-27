@@ -132,11 +132,22 @@ export const extractContent = async (file) => {
     }
 };
 
+// Helper function to normalize OCR-spaced text (e.g., "1 2 3 4" -> "1234")
+const normalizeSpaces = (text) => {
+    return text.replace(/\s+/g, '');
+};
+
 // Redact PII (Personally Identifiable Information)
 export const redactPII = (text) => {
     if (!text) return { redactedText: '', redactedItems: [] };
 
     const matches = [];
+    const extractedValues = {
+        names: new Set(),
+        cnp: new Set(),
+        seria: new Set(),
+        nr: new Set()
+    };
 
     // Email regex
     const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
@@ -151,24 +162,43 @@ export const redactPII = (text) => {
         });
     }
 
+    // Phone regex with variations (tel/tel./tel. mobil) and OCR spacing
+    // Handles: tel: 0712 345 678, tel. mobil: 0 7 1 2 3 4 5 6 7 8, etc.
+    const phoneWithLabelRegex = /\b((?:tel\.?\s*(?:mobil)?\s*:?\s*))(\+?\s*\d(?:\s*[\d\s.-]){8,15}\d)/gi;
+    while ((match = phoneWithLabelRegex.exec(text)) !== null) {
+        const label = match[1];
+        const phoneNumber = match[2];
+        const normalized = normalizeSpaces(phoneNumber);
+
+        // Validate it's a reasonable phone number after normalization
+        if (/^[\+\d][\d.-]{7,14}\d$/.test(normalized)) {
+            matches.push({
+                type: 'Phone',
+                original: match[0],
+                start: match.index,
+                end: match.index + match[0].length,
+                replacement: label + '[REDACTED]'
+            });
+        }
+    }
+
     // Phone regex - improved to avoid false positives with dates and year ranges
-    // Matches: +40 123 456 789, 0712-345-678, 0712.345.678, 0712 345 678, etc.
-    // Avoids: 2025-22801, 28.02.2025, etc.
-    // Pattern explanation:
-    // - Must start with + or 0 (not just any digit)
-    // - If starts with +, must be followed by 1-3 digits (country code)
-    // - Then must have consistent separators (all spaces, all dashes, or all dots, or none)
-    // - Total length should be appropriate for a phone number
-    const phoneRegex = /(?<![\/\d])(?:\+\d{1,3}[\s.-]?\d{2,4}[\s.-]?\d{2,4}[\s.-]?\d{2,4}|0\d{2,3}[\s.-]?\d{2,4}[\s.-]?\d{2,4}(?:[\s.-]?\d{2,4})?)(?![\d])/g;
+    // Also handles OCR spacing: 0 7 1 2 3 4 5 6 7 8
+    const phoneRegex = /(?<![\\/\d])(?:\+\s*\d{1,3}(?:\s*[\s.-]?\s*\d){7,12}|0\s*\d{2,3}(?:\s*[\s.-]?\s*\d){6,10})(?![\d])/g;
     while ((match = phoneRegex.exec(text)) !== null) {
-        // Additional validation: check that it's not a date-like pattern
         const matched = match[0];
-        // Skip if it looks like a date (e.g., contains patterns like dd.mm.yyyy or yyyy-mm-dd)
-        if (/^\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4}$/.test(matched) || /^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/.test(matched)) {
+        const normalized = normalizeSpaces(matched);
+
+        // Skip if it looks like a date after normalization
+        if (/^\d{1,2}[.\/]\d{1,2}[.\/]\d{2,4}$/.test(normalized) || /^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}$/.test(normalized)) {
             continue;
         }
-        // Skip if it's a year range or similar (e.g., 2025-22801)
-        if (/^(19|20)\d{2}[-]\d+$/.test(matched)) {
+        // Skip if it's a year range
+        if (/^(19|20)\d{2}[-]\d+$/.test(normalized)) {
+            continue;
+        }
+        // Must be a valid phone length after normalization
+        if (normalized.length < 9 || normalized.length > 15) {
             continue;
         }
 
@@ -181,12 +211,65 @@ export const redactPII = (text) => {
         });
     }
 
-    // Romanian CNP (Cod Numeric Personal) - 13 digits
-    // Pattern: CNP followed by optional colon/space and 13 digits
-    const cnpRegex = /\bCNP\s*:?\s*(\d{13})\b/gi;
+    // Romanian CNP (Cod Numeric Personal) - 13 digits with optional OCR spacing
+    // Handles: CNP: 1234567890123 or CNP: 1 2 3 4 5 6 7 8 9 0 1 2 3
+    const cnpRegex = /\bCNP\s*:?\s*((?:\d\s*){12}\d)(?=\s|$|[^\d])/gi;
     while ((match = cnpRegex.exec(text)) !== null) {
+        const cnpValue = match[1];
+        const normalized = normalizeSpaces(cnpValue);
+
+        // Verify it's exactly 13 digits after normalization
+        if (/^\d{13}$/.test(normalized)) {
+            extractedValues.cnp.add(normalized);
+            matches.push({
+                type: 'CNP',
+                original: match[0],
+                start: match.index,
+                end: match.index + match[0].length,
+                replacement: match[0].replace(cnpValue, '[REDACTED]'),
+                extractedValue: normalized
+            });
+        }
+    }
+
+    // Identity Card Seria (2 uppercase letters)
+    const seriaRegex = /\b(?:seria|ser\.?)\s*:?\s*([A-Z]{2})\b/gi;
+    while ((match = seriaRegex.exec(text)) !== null) {
+        extractedValues.seria.add(match[1]);
         matches.push({
-            type: 'CNP',
+            type: 'ID Seria',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(match[1], '[REDACTED]'),
+            extractedValue: match[1]
+        });
+    }
+
+    // Identity Card Nr (6-8 digits with optional OCR spacing)
+    const nrRegex = /\b(?:nr\.?|număr)\s*(?:buletin|CI|carte\s+de\s+identitate)?\s*:?\s*((?:\d\s*){6,8})\b/gi;
+    while ((match = nrRegex.exec(text)) !== null) {
+        const nrValue = match[1];
+        const normalized = normalizeSpaces(nrValue);
+
+        if (/^\d{6,8}$/.test(normalized)) {
+            extractedValues.nr.add(normalized);
+            matches.push({
+                type: 'ID Number',
+                original: match[0],
+                start: match.index,
+                end: match.index + match[0].length,
+                replacement: match[0].replace(nrValue, '[REDACTED]'),
+                extractedValue: normalized
+            });
+        }
+    }
+
+    // Eliberat de (issuing authority)
+    const eliberatRegex = /\b(?:eliberat(?:ă)?\s+de|emis(?:ă)?\s+de)\s*:?\s*([A-ZĂÂÎȘȚ][A-ZĂÂÎȘȚ\s\d.-]{3,50}?)(?=\s*(?:\n|$|,|;|\.|data))/gi;
+    while ((match = eliberatRegex.exec(text)) !== null) {
+        matches.push({
+            type: 'Issuing Authority',
             original: match[0],
             start: match.index,
             end: match.index + match[0].length,
@@ -194,36 +277,186 @@ export const redactPII = (text) => {
         });
     }
 
-    // Romanian Last Name (Nume or Nume de familie)
-    // Pattern: "Nume" or "Nume de familie" followed by optional colon/space and the actual name
-    const lastNameRegex = /\b(?:Nume de familie|Nume)\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/g;
-    while ((match = lastNameRegex.exec(text)) !== null) {
+    // Data nașterii (birth date) - only redact dates in this context
+    // Handles OCR spacing: 2 8 . 0 2 . 1 9 9 0
+    const birthDateRegex = /\b(?:data\s+nașterii|născut(?:ă)?\s+la)\s*:?\s*((?:\d\s*){1,2}\s*[.\/\s-]\s*(?:\d\s*){1,2}\s*[.\/\s-]\s*(?:\d\s*){2,4})/gi;
+    while ((match = birthDateRegex.exec(text)) !== null) {
+        matches.push({
+            type: 'Birth Date',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(match[1], '[REDACTED]')
+        });
+    }
+
+    // Context-aware name patterns
+    // Handle inflections and avoid "prenume" followed by "nume" (and vice versa)
+
+    // "Subsemnat" pattern (subsemnatul/subsemnata followed by name)
+    const subsemnatRegex = /\bsubsemnat(?:ul|a)\s+([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)+)/g;
+    while ((match = subsemnatRegex.exec(text)) !== null) {
+        const name = match[1];
+        extractedValues.names.add(name.toLowerCase());
+        matches.push({
+            type: 'Name',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(name, '[REDACTED]'),
+            extractedValue: name
+        });
+    }
+
+    // "Numele și prenumele" combined pattern
+    const numelePrenumeleCombinedRegex = /\b(?:numele\s+și\s+prenumele|prenumele\s+și\s+numele)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)+)/gi;
+    while ((match = numelePrenumeleCombinedRegex.exec(text)) !== null) {
+        const name = match[1];
+        extractedValues.names.add(name.toLowerCase());
+        matches.push({
+            type: 'Name',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(name, '[REDACTED]'),
+            extractedValue: name
+        });
+    }
+
+    // "Numele" (inflection) - but NOT if followed by "prenume" or "și prenume"
+    const numeleRegex = /\b(?:numele)(?!\s+(?:și\s+)?prenume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/gi;
+    while ((match = numeleRegex.exec(text)) !== null) {
+        const name = match[1];
+        extractedValues.names.add(name.toLowerCase());
         matches.push({
             type: 'Last Name',
             original: match[0],
             start: match.index,
             end: match.index + match[0].length,
-            replacement: match[0].replace(match[1], '[REDACTED]')
+            replacement: match[0].replace(name, '[REDACTED]'),
+            extractedValue: name
         });
     }
 
-    // Romanian First Name (Prenume)
-    // Pattern: "Prenume" followed by optional colon/space and the actual name
-    const firstNameRegex = /\bPrenume\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/g;
-    while ((match = firstNameRegex.exec(text)) !== null) {
+    // "Prenumele" (inflection) - but NOT if followed by "nume" or "și nume"
+    const prenumeleRegex = /\b(?:prenumele)(?!\s+(?:și\s+)?nume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/gi;
+    while ((match = prenumeleRegex.exec(text)) !== null) {
+        const name = match[1];
+        extractedValues.names.add(name.toLowerCase());
         matches.push({
             type: 'First Name',
             original: match[0],
             start: match.index,
             end: match.index + match[0].length,
-            replacement: match[0].replace(match[1], '[REDACTED]')
+            replacement: match[0].replace(name, '[REDACTED]'),
+            extractedValue: name
+        });
+    }
+
+    // "Nume de familie" - but NOT if followed by "și prenume" or just "prenume"
+    const numeDefamilieRegex = /\b(?:Nume\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/g;
+    while ((match = numeDefamilieRegex.exec(text)) !== null) {
+        const name = match[1];
+        extractedValues.names.add(name.toLowerCase());
+        matches.push({
+            type: 'Last Name',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(name, '[REDACTED]'),
+            extractedValue: name
+        });
+    }
+
+    // "Nume" (simple) - but NOT if followed by "și Prenume" or just "Prenume"
+    const numeSimpleRegex = /\b(?:Nume)(?!\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/g;
+    while ((match = numeSimpleRegex.exec(text)) !== null) {
+        const name = match[1];
+        extractedValues.names.add(name.toLowerCase());
+        matches.push({
+            type: 'Last Name',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(name, '[REDACTED]'),
+            extractedValue: name
+        });
+    }
+
+    // "Prenume" (simple) - but NOT if followed by "și Nume" or just "Nume"
+    const prenumeSimpleRegex = /\b(?:Prenume)(?!\s*:?\s*(?:și\s+)?[Nn]ume\b)\s*:?\s*([A-ZĂÂÎȘȚ][a-zăâîșț]+(?:[-\s][A-ZĂÂÎȘȚ][a-zăâîșț]+)*)/g;
+    while ((match = prenumeSimpleRegex.exec(text)) !== null) {
+        const name = match[1];
+        extractedValues.names.add(name.toLowerCase());
+        matches.push({
+            type: 'First Name',
+            original: match[0],
+            start: match.index,
+            end: match.index + match[0].length,
+            replacement: match[0].replace(name, '[REDACTED]'),
+            extractedValue: name
         });
     }
 
     // Sort matches by start index
     matches.sort((a, b) => a.start - b.start);
 
-    // Filter out overlapping matches (simple strategy: keep first, skip if overlaps with previous)
+    // Before filtering overlaps, search for repeated occurrences of extracted values
+    // Search for repeated names (case-insensitive) in original text
+    for (const name of extractedValues.names) {
+        if (name.length < 3) continue; // Skip very short names
+
+        const nameRegex = new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+        let repeatMatch;
+
+        while ((repeatMatch = nameRegex.exec(text)) !== null) {
+            // Check if this overlaps with any existing match
+            const overlaps = matches.some(m =>
+                (repeatMatch.index >= m.start && repeatMatch.index < m.end) ||
+                (m.start >= repeatMatch.index && m.start < repeatMatch.index + repeatMatch[0].length)
+            );
+
+            if (!overlaps) {
+                matches.push({
+                    type: 'Repeated Name',
+                    original: repeatMatch[0],
+                    start: repeatMatch.index,
+                    end: repeatMatch.index + repeatMatch[0].length,
+                    replacement: '[REPEATED NAME REDACTED]'
+                });
+            }
+        }
+    }
+
+    // Search for repeated CNP (with optional OCR spacing) in original text
+    for (const cnp of extractedValues.cnp) {
+        const cnpWithSpaces = cnp.split('').join('\\s*');
+        const cnpRegexRepeat = new RegExp(`\\b${cnpWithSpaces}\\b`, 'g');
+        let repeatMatch;
+
+        while ((repeatMatch = cnpRegexRepeat.exec(text)) !== null) {
+            // Check if this overlaps with any existing match
+            const overlaps = matches.some(m =>
+                (repeatMatch.index >= m.start && repeatMatch.index < m.end) ||
+                (m.start >= repeatMatch.index && m.start < repeatMatch.index + repeatMatch[0].length)
+            );
+
+            if (!overlaps) {
+                matches.push({
+                    type: 'Repeated CNP',
+                    original: repeatMatch[0],
+                    start: repeatMatch.index,
+                    end: repeatMatch.index + repeatMatch[0].length,
+                    replacement: '[REPEATED CNP REDACTED]'
+                });
+            }
+        }
+    }
+
+    // Re-sort after adding repeated matches
+    matches.sort((a, b) => a.start - b.start);
+
+    // Filter out overlapping matches (keep first, skip if overlaps with previous)
     const uniqueMatches = [];
     let lastEnd = 0;
     for (const m of matches) {
@@ -233,22 +466,15 @@ export const redactPII = (text) => {
         }
     }
 
-    // Reconstruct text and calculate new indices
+    // Apply all redactions in one pass
     let redactedText = '';
     let currentIndex = 0;
     const redactedItems = [];
 
     for (const m of uniqueMatches) {
-        // Append text before match
         redactedText += text.slice(currentIndex, m.start);
-
-        // Calculate new start index in redacted text
         const newStart = redactedText.length;
-
-        // Append replacement
         redactedText += m.replacement;
-
-        // Calculate new end index
         const newEnd = redactedText.length;
 
         redactedItems.push({
@@ -260,8 +486,6 @@ export const redactPII = (text) => {
 
         currentIndex = m.end;
     }
-
-    // Append remaining text
     redactedText += text.slice(currentIndex);
 
     return { redactedText, redactedItems };
