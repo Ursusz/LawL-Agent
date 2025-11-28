@@ -45,11 +45,7 @@ BRAVE_SEARCH_API_KEY=your_api_key
     ```
 4.
     ```bash
-    cd src
-    ```
-5. 
-    ```bash
-    uvicorn main:app --reload
+    uv run python -m uvicorn src.main:app --reload
     ```
     Serverul va porni pe `http://127.0.0.1:8000`.
 

@@ -105,7 +105,12 @@ export default function FileUpload({ setLoading }) {
       }
 
       const results = await response.json();
-      navigate('/results', { state: { results: results } });
+      // Map originalFileName to each result item
+      const resultsWithFileName = results.map(item => ({
+        ...item,
+        originalFileName: originalFileName
+      }));
+      navigate('/results', { state: { results: resultsWithFileName, extractedText } });
     } catch (error) {
       console.error('Error sending files:', error);
       navigate('/results', { state: { error: 'An error occurred during upload.' } });
