@@ -213,7 +213,7 @@ export const redactPII = (text) => {
 
     // Romanian CNP (Cod Numeric Personal) - 13 digits with optional OCR spacing
     // Handles: CNP: 1234567890123 or CNP: 1 2 3 4 5 6 7 8 9 0 1 2 3
-    const cnpRegex = /\bCNP\s*:?\s*((?:\d\s*){12}\d)(?=\s|$|[^\d]|\.|,)/gi;
+    const cnpRegex = /\bCNP\s*[^\d\n]{0,5}\s*((?:\d\s*){12}\d)(?=\s|$|[^\d]|\.|,)/gi;
     while ((match = cnpRegex.exec(text)) !== null) {
         const cnpValue = match[1];
         const normalized = normalizeSpaces(cnpValue);
@@ -233,7 +233,7 @@ export const redactPII = (text) => {
     }
 
     // Identity Card Seria (2 uppercase letters with optional OCR spacing)
-    const seriaRegex = /\b(?:seria|ser\.?)\s*:?\s*([A-Z]\s*[A-Z])\b/gi;
+    const seriaRegex = /\b(?:seria|ser\.?)\s*[^A-Z\n]{0,5}\s*([A-Z]\s*[A-Z])\b/gi;
     while ((match = seriaRegex.exec(text)) !== null) {
         const seriaValue = match[1];
         const normalized = normalizeSpaces(seriaValue);
@@ -251,7 +251,7 @@ export const redactPII = (text) => {
     }
 
     // Identity Card Nr (6-8 digits with optional OCR spacing)
-    const nrRegex = /\b(?:nr\.?|număr)\s*(?:buletin|CI|carte\s+de\s+identitate)?\s*:?\s*((?:\d\s*){6,8})\b/gi;
+    const nrRegex = /\b(?:nr\.?|număr)\s*(?:buletin|CI|carte\s+de\s+identitate)?\s*[^\d\n]{0,5}\s*((?:\d\s*){6,8})\b/gi;
     while ((match = nrRegex.exec(text)) !== null) {
         const nrValue = match[1];
         const normalized = normalizeSpaces(nrValue);
@@ -283,7 +283,7 @@ export const redactPII = (text) => {
 
     // Data nașterii (birth date) - only redact dates in this context
     // Handles OCR spacing: 2 8 . 0 2 . 1 9 9 0
-    const birthDateRegex = /\b(?:data\s+nașterii|născut(?:ă)?\s+la)\s*:?\s*((?:\d\s*){1,2}\s*[./\s-]\s*(?:\d\s*){1,2}\s*[./\s-]\s*(?:\d\s*){2,4})/gi;
+    const birthDateRegex = /\b(?:data\s+nașterii|născut(?:ă)?\s+la)\s*[^\d\n]{0,5}\s*((?:\d\s*){1,2}\s*[./\s-]\s*(?:\d\s*){1,2}\s*[./\s-]\s*(?:\d\s*){2,4})/gi;
     while ((match = birthDateRegex.exec(text)) !== null) {
         matches.push({
             type: 'Birth Date',

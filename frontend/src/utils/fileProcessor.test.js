@@ -384,6 +384,63 @@ describe('fileProcessor', () => {
             expect(redactedText).toMatch(/Tel\.?\s*mobil:\s*\[REDACTED\]/);
         });
 
+        it('should handle OCR noise between CNP label and value', () => {
+            const texts = [
+                'CNP . : 1234567890123',
+                'CNP .. 1234567890123',
+                'CNP - 1234567890123',
+                'CNP _ 1234567890123',
+                'CNP . . 1234567890123'
+            ];
+            texts.forEach(t => {
+                const { redactedItems } = redactPII(t);
+                expect(redactedItems).toHaveLength(1);
+                expect(redactedItems[0].type).toBe('CNP');
+            });
+        });
+
+        it('should handle OCR noise between Seria label and value', () => {
+            const texts = [
+                'seria . : XX',
+                'seria .. XX',
+                'seria - XX',
+                'seria _ XX'
+            ];
+            texts.forEach(t => {
+                const { redactedItems } = redactPII(t);
+                expect(redactedItems).toHaveLength(1);
+                expect(redactedItems[0].type).toBe('ID Seria');
+            });
+        });
+
+        it('should handle OCR noise between ID Number label and value', () => {
+            const texts = [
+                'nr . : 123456',
+                'nr .. 123456',
+                'nr - 123456',
+                'nr _ 123456'
+            ];
+            texts.forEach(t => {
+                const { redactedItems } = redactPII(t);
+                expect(redactedItems).toHaveLength(1);
+                expect(redactedItems[0].type).toBe('ID Number');
+            });
+        });
+
+        it('should handle OCR noise between Birth Date label and value', () => {
+            const texts = [
+                'data nașterii . : 28.02.1990',
+                'data nașterii .. 28.02.1990',
+                'data nașterii - 28.02.1990',
+                'data nașterii _ 28.02.1990'
+            ];
+            texts.forEach(t => {
+                const { redactedItems } = redactPII(t);
+                expect(redactedItems).toHaveLength(1);
+                expect(redactedItems[0].type).toBe('Birth Date');
+            });
+        });
+
     });
 
     describe('adjustRedactionPositions', () => {
