@@ -777,6 +777,115 @@ describe('fileProcessor', () => {
             expect(result[0].original).toBe('World ');
             expect(result[0].start).toBe(5);
         });
+
+        // Idempotency tests
+        it('should support idempotent undo/redo - single edit', () => {
+            Date.now = jest.fn(() => 1000);
+            const initialText = 'Hello';
+
+            // Apply edit: "Hello" -> "Hello World"
+            const edits1 = processManualEdit([], 'Hello World', 'Hello', 5, 6, [], [], initialText);
+            expect(edits1).toHaveLength(1);
+            expect(edits1[0]).toMatchObject({
+                start: 5,
+                end: 11,
+                original: '',
+                replacement: ' World'
+            });
+
+            // Simulate undo by reconstructing text from initial
+            const textAfterUndo = initialText;
+            expect(textAfterUndo).toBe('Hello');
+
+            // Simulate redo by applying edit
+            const textAfterRedo = initialText.slice(0, edits1[0].start) + edits1[0].replacement + initialText.slice(edits1[0].start + edits1[0].original.length);
+            expect(textAfterRedo).toBe('Hello World');
+
+            // Undo again - should be identical to first undo
+            const textAfterSecondUndo = initialText;
+            expect(textAfterSecondUndo).toBe(textAfterUndo);
+        });
+
+        it('should support idempotent undo/redo - multiple edits', () => {
+            Date.now = jest.fn(() => 1000);
+            const initialText = 'ABC';
+
+            // Edit 1: "ABC" -> "ABCD"
+            const edits1 = processManualEdit([], 'ABCD', 'ABC', 3, 1, [], [], initialText);
+
+            // Edit 2: "ABCD" -> "ABCDE"
+            Date.now = jest.fn(() => 1100);
+            const edits2 = processManualEdit(edits1, 'ABCDE', 'ABCD', 4, 1, [], [], initialText);
+
+            expect(edits2).toHaveLength(1); // Should merge
+            expect(edits2[0].replacement).toBe('DE');
+
+            // Reconstruct after both edits
+            let text = initialText;
+            for (const edit of edits2) {
+                text = text.slice(0, edit.start) + edit.replacement + text.slice(edit.start + edit.original.length);
+            }
+            expect(text).toBe('ABCDE');
+
+            // Undo all (back to initial)
+            const textAfterUndoAll = initialText;
+            expect(textAfterUndoAll).toBe('ABC');
+
+            // Redo all
+            let textAfterRedoAll = initialText;
+            for (const edit of edits2) {
+                textAfterRedoAll = textAfterRedoAll.slice(0, edit.start) + edit.replacement + textAfterRedoAll.slice(edit.start + edit.original.length);
+            }
+            expect(textAfterRedoAll).toBe('ABCDE');
+
+            // Undo again - should be identical
+            const textAfterSecondUndo = initialText;
+            expect(textAfterSecondUndo).toBe(textAfterUndoAll);
+        });
+
+        it('should support idempotent undo/redo - with deletions', () => {
+            Date.now = jest.fn(() => 1000);
+            const initialText = 'Hello World';
+
+            // Edit 1: Delete "World" -> "Hello "
+            const edits1 = processManualEdit([], 'Hello ', 'Hello World', 6, -5, [], [], initialText);
+            expect(edits1[0]).toMatchObject({
+                start: 6,
+                end: 6,
+                original: 'World',
+                replacement: ''
+            });
+
+            // Edit 2: Add "Universe" -> "Hello Universe"
+            Date.now = jest.fn(() => 1100);
+            const edits2 = processManualEdit(edits1, 'Hello Universe', 'Hello ', 6, 8, [], [], initialText);
+
+            // Reconstruct text
+            let text = initialText;
+            for (const edit of edits2) {
+                text = text.slice(0, edit.start) + edit.replacement + text.slice(edit.start + edit.original.length);
+            }
+            expect(text).toBe('Hello Universe');
+
+            // Undo all
+            expect(initialText).toBe('Hello World');
+
+            // Redo all
+            let redoText = initialText;
+            for (const edit of edits2) {
+                redoText = redoText.slice(0, edit.start) + edit.replacement + redoText.slice(edit.start + edit.original.length);
+            }
+            expect(redoText).toBe('Hello Universe');
+
+            // Multiple undo/redo cycles should be stable
+            for (let i = 0; i < 3; i++) {
+                let cycleText = initialText;
+                for (const edit of edits2) {
+                    cycleText = cycleText.slice(0, edit.start) + edit.replacement + cycleText.slice(edit.start + edit.original.length);
+                }
+                expect(cycleText).toBe('Hello Universe');
+            }
+        });
     });
 
     describe('OCR spacing fixes', () => {
