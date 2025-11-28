@@ -473,4 +473,227 @@ describe('fileProcessor', () => {
             expect(result).toHaveLength(0); // Item should be removed (negative start)
         });
     });
+
+    describe('processManualEdit', () => {
+        const { processManualEdit } = require('./fileProcessor');
+        let originalDateNow;
+
+        beforeAll(() => {
+            originalDateNow = Date.now;
+        });
+
+        afterAll(() => {
+            Date.now = originalDateNow;
+        });
+
+        it('should create a new edit when list is empty', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [];
+            const result = processManualEdit(edits, 'a', '', 0, 1, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toMatchObject({
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 0,
+                addedText: 'a',
+                removedText: '',
+                newText: 'a'
+            });
+        });
+
+        it('should merge consecutive typing edits', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 0,
+                addedText: 'H',
+                removedText: '',
+                newText: 'H'
+            }];
+
+            Date.now = jest.fn(() => 1100); // 100ms later
+            const result = processManualEdit(edits, 'He', 'H', 1, 1, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].addedText).toBe('He');
+            expect(result[0].newText).toBe('He');
+            expect(result[0].timestamp).toBe(1100);
+        });
+
+        it('should merge even if time difference > 2s (no time limit)', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 0,
+                addedText: 'H',
+                removedText: '',
+                newText: 'H'
+            }];
+
+            Date.now = jest.fn(() => 3500); // 2.5s later
+            const result = processManualEdit(edits, 'He', 'H', 1, 1, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].addedText).toBe('He');
+        });
+
+        it('should merge backspace on recently added text', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 0,
+                addedText: 'Hi',
+                removedText: '',
+                newText: 'Hi'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Backspace 'i' (pos 1, length 1)
+            const result = processManualEdit(edits, 'H', 'Hi', 1, -1, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].addedText).toBe('H');
+            expect(result[0].newText).toBe('H');
+        });
+
+        it('should handle block undo (Ctrl+Z) as backspace', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 0,
+                addedText: 'Hello',
+                removedText: '',
+                newText: 'Hello'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Undo "Hello" -> "" (pos 0, remove 5 chars)
+            const result = processManualEdit(edits, '', 'Hello', 0, -5, [], []);
+
+            expect(result).toHaveLength(0); // Should completely remove the edit
+        });
+
+        it('should remove edit if all added text is backspaced', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 0,
+                addedText: 'H',
+                removedText: '',
+                newText: 'H'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Backspace 'H'
+            const result = processManualEdit(edits, '', 'H', 0, -1, [], []);
+
+            expect(result).toHaveLength(0);
+        });
+
+        it('should NOT merge if cursor moved (non-consecutive)', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 0,
+                addedText: 'A',
+                removedText: '',
+                newText: 'A'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Insert 'B' at position 5 (not 1)
+            const result = processManualEdit(edits, 'A    B', 'A    ', 5, 1, [], []);
+
+            expect(result).toHaveLength(2);
+        });
+
+        it('should merge consecutive deletions (Backspace)', () => {
+            Date.now = jest.fn(() => 1000);
+            // Initial state: "Hello" -> "Hell" (deleted 'o')
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 4,
+                addedText: '',
+                removedText: 'o',
+                originalText: 'Hello',
+                newText: 'Hell'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Backspace 'l' (pos 3)
+            // oldText: "Hell", newText: "Hel"
+            const result = processManualEdit(edits, 'Hel', 'Hell', 3, -1, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].removedText).toBe('lo'); // 'l' + 'o'
+            expect(result[0].position).toBe(3);
+            expect(result[0].newText).toBe('Hel');
+            expect(result[0].originalText).toBe('Hello');
+        });
+
+        it('should merge consecutive deletions (Delete key)', () => {
+            Date.now = jest.fn(() => 1000);
+            // Initial state: "Hello" -> "ello" (deleted 'H' at 0)
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                position: 0,
+                addedText: '',
+                removedText: 'H',
+                originalText: 'Hello',
+                newText: 'ello'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Delete 'e' (pos 0)
+            // oldText: "ello", newText: "llo"
+            const result = processManualEdit(edits, 'llo', 'ello', 0, -1, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].removedText).toBe('He'); // 'H' + 'e'
+            expect(result[0].position).toBe(0);
+            expect(result[0].newText).toBe('llo');
+            expect(result[0].originalText).toBe('Hello');
+        });
+    });
+
+    describe('OCR spacing fixes', () => {
+        it('should handle OCR-spaced seria (X X)', () => {
+            const text = 'seria: X X, nr: 123456';
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toContain('seria: [REDACTED]');
+            expect(redactedItems.some(item => item.type === 'ID Seria')).toBe(true);
+            const seriaItem = redactedItems.find(item => item.type === 'ID Seria');
+            expect(seriaItem.extractedValue).toBe('XX');
+        });
+
+        it('should handle eliberat de with extended text until "la data"', () => {
+            const text = 'eliberat de SPCLEP SECTOR 1 BUCUREȘTI la data 28.02.2025';
+            const { redactedText, redactedItems } = redactPII(text);
+            expect(redactedText).toContain('eliberat de [REDACTED] la data');
+            expect(redactedItems.some(item => item.type === 'Issuing Authority')).toBe(true);
+        });
+
+        it('should handle Romanian characters with both ș/ț and ş/ţ variants', () => {
+            const texts = [
+                'Nume: Ștefan',
+                'Nume: Ştefan',
+                'Prenume: Țăran',
+                'Prenume: Ţăran'
+            ];
+            texts.forEach(text => {
+                const { redactedText, redactedItems } = redactPII(text);
+                expect(redactedText).toContain('[REDACTED]');
+                expect(redactedItems.length).toBeGreaterThan(0);
+            });
+        });
+    });
 });

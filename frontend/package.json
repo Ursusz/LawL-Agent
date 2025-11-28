@@ -35,7 +35,8 @@
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:coverage": "react-app-rewired test --coverage --watchAll=false"
   },
   "eslintConfig": {
     "extends": [

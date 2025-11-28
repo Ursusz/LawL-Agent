@@ -232,18 +232,22 @@ export const redactPII = (text) => {
         }
     }
 
-    // Identity Card Seria (2 uppercase letters)
-    const seriaRegex = /\b(?:seria|ser\.?)\s*:?\s*([A-Z]{2})\b/gi;
+    // Identity Card Seria (2 uppercase letters with optional OCR spacing)
+    const seriaRegex = /\b(?:seria|ser\.?)\s*:?\s*([A-Z]\s*[A-Z])\b/gi;
     while ((match = seriaRegex.exec(text)) !== null) {
-        extractedValues.seria.add(match[1]);
-        matches.push({
-            type: 'ID Seria',
-            original: match[0],
-            start: match.index,
-            end: match.index + match[0].length,
-            replacement: match[0].replace(match[1], '[REDACTED]'),
-            extractedValue: match[1]
-        });
+        const seriaValue = match[1];
+        const normalized = normalizeSpaces(seriaValue);
+        if (/^[A-Z]{2}$/.test(normalized)) {
+            extractedValues.seria.add(normalized);
+            matches.push({
+                type: 'ID Seria',
+                original: match[0],
+                start: match.index,
+                end: match.index + match[0].length,
+                replacement: match[0].replace(seriaValue, '[REDACTED]'),
+                extractedValue: normalized
+            });
+        }
     }
 
     // Identity Card Nr (6-8 digits with optional OCR spacing)
@@ -266,7 +270,7 @@ export const redactPII = (text) => {
     }
 
     // Eliberat de (issuing authority)
-    const eliberatRegex = /\b(?:eliberat(?:ă)?\s+de|emis(?:ă)?\s+de)\s*:?\s*([A-ZĂÂÎȘȚ][A-ZĂÂÎȘȚ\s\d.-]{3,50}?)(?=\s*(?:\n|$|,|;|\.|data))/gi;
+    const eliberatRegex = /\b(?:eliberat(?:ă)?\s+de|emis(?:ă)?\s+de)\s*:?\s*([A-ZĂÂÎȘȚŞŢa-zăâîșțşţ][A-ZĂÂÎȘȚŞŢa-zăâîșțşţ\s\d.-]{3,50}?)(?=\s*(?:\n|$|,|;|\.|la\s+data))/gi;
     while ((match = eliberatRegex.exec(text)) !== null) {
         matches.push({
             type: 'Issuing Authority',
@@ -295,7 +299,7 @@ export const redactPII = (text) => {
 
     // "Subsemnat" pattern (subsemnatul/subsemnata followed by name)
     // Handles: Ion Popescu, Maria-Elena Ionescu, Ion C. Popescu, etc.
-    const subsemnatRegex = /\b[S|s]ubsemnat(?:ul|a)\s+((?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.)(?:[ \t]+(?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.))+)/g;
+    const subsemnatRegex = /\b[S|s]ubsemnat(?:ul|a)\s+((?:[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|[A-ZĂÂÎȘȚŞŢ]\.)(?:[ \t]+(?:[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|[A-ZĂÂÎȘȚŞŢ]\.))+)/g;
     while ((match = subsemnatRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -311,7 +315,7 @@ export const redactPII = (text) => {
 
     // "Numele și prenumele" combined pattern
     // Handles complex names with multiple parts and initials
-    const numelePrenumeleCombinedRegex = /\b(?:numele\s+și\s+prenumele|prenumele\s+și\s+numele)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*((?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.)(?:[ \t]+(?:[A-ZĂÂÎȘȚ][a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|[A-ZĂÂÎȘȚ]\.))+)/gi;
+    const numelePrenumeleCombinedRegex = /\b(?:numele\s+și\s+prenumele|prenumele\s+și\s+numele)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*((?:[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|[A-ZĂÂÎȘȚŞŢ]\.)(?:[ \t]+(?:[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|[A-ZĂÂÎȘȚŞŢ]\.))+)/gi;
     while ((match = numelePrenumeleCombinedRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -327,7 +331,7 @@ export const redactPII = (text) => {
 
     // "Numele" (inflection) - but NOT if followed by "prenume" or "și prenume"
     // Handles: Popescu, Popescu-Ionescu, De La Cruz, etc.
-    const numeleRegex = /\b(?:numele)(?!\s+(?:și\s+)?prenume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/gi;
+    const numeleRegex = /\b(?:numele)(?!\s+(?:și\s+)?prenume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.))*)/gi;
     while ((match = numeleRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -343,7 +347,7 @@ export const redactPII = (text) => {
 
     // "Prenumele" (inflection) - but NOT if followed by "nume" or "și nume"
     // Handles: Ion, Maria-Elena, Ion Vasile, etc.
-    const prenumeleRegex = /\b(?:prenumele)(?!\s+(?:și\s+)?nume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/gi;
+    const prenumeleRegex = /\b(?:prenumele)(?!\s+(?:și\s+)?nume\b)(?:\s+(?:din|de\s+pe)?\s*(?:actul\s+de\s+identitate|buletin|carte\s+de\s+identitate))?\s*:?\s*([A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.))*)/gi;
     while ((match = prenumeleRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -359,7 +363,7 @@ export const redactPII = (text) => {
 
     // "Nume de familie" - but NOT if followed by "și prenume" or just "prenume"
     // Handles: Popescu, Popescu-Ionescu, De La Cruz, etc.
-    const numeDefamilieRegex = /\b(?:Nume\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
+    const numeDefamilieRegex = /\b(?:Nume\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.))*)/g;
     while ((match = numeDefamilieRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -375,7 +379,7 @@ export const redactPII = (text) => {
 
     // "Nume" (simple) - but NOT if followed by "și Prenume" or just "Prenume"
     // Handles: Popescu, Popescu-Ionescu, De La Cruz, etc.
-    const numeSimpleRegex = /\b(?:Nume)(?!\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
+    const numeSimpleRegex = /\b(?:Nume)(?!\s+de\s+familie)(?!\s*:?\s*(?:și\s+)?[Pp]renume\b)\s*:?\s*([A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.))*)/g;
     while ((match = numeSimpleRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -391,7 +395,7 @@ export const redactPII = (text) => {
 
     // "Prenume" (simple) - but NOT if followed by "și Nume" or just "Nume"
     // Handles: Ion, Maria-Elena, Ion Vasile Constantin, Ion C., etc.
-    const prenumeSimpleRegex = /\b(?:Prenume)(?!\s*:?\s*(?:și\s+)?[Nn]ume\b)\s*:?\s*([A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚ](?:[a-zăâîșț]+(?:-[A-ZĂÂÎȘȚ][a-zăâîșț]+)*|\.))*)/g;
+    const prenumeSimpleRegex = /\b(?:Prenume)(?!\s*:?\s*(?:și\s+)?[Nn]ume\b)\s*:?\s*([A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.)(?:[ \t]+[A-ZĂÂÎȘȚŞŢ](?:[a-zăâîșțşţ]+(?:-[A-ZĂÂÎȘȚŞŢ][a-zăâîșțşţ]+)*|\.))*)/g;
     while ((match = prenumeSimpleRegex.exec(text)) !== null) {
         const name = match[1];
         extractedValues.names.add(name.toLowerCase());
@@ -491,9 +495,7 @@ export const redactPII = (text) => {
         const newEnd = redactedText.length;
 
         redactedItems.push({
-            type: m.type,
-            original: m.original,
-            replacement: m.replacement,
+            ...m,
             start: newStart,
             end: newEnd
         });
@@ -503,6 +505,108 @@ export const redactPII = (text) => {
     redactedText += text.slice(currentIndex);
 
     return { redactedText, redactedItems };
+};
+
+export const processManualEdit = (
+    manualEdits,
+    newText,
+    oldText,
+    editPosition,
+    offset,
+    redactedItemsBefore,
+    redactedItemsAfter
+) => {
+    const timestamp = Date.now();
+    // Filter out undone edits if we're making a new edit (linear history)
+    // But wait, if we want to support Redo of old edits, we might keep them?
+    // Standard behavior: New edit clears redo stack.
+    // So we should probably remove any edits that are 'undone' or after the current head.
+    // For now, let's assume we append to the end of the *active* list.
+    // The calling component handles the list management (slicing if needed).
+    // Here we just look at the last edit in the provided list.
+
+    const lastEdit = manualEdits[manualEdits.length - 1];
+    // Removed time check as per user request
+    const isConsecutive = true;
+
+    // Extract what was added/removed
+    const addedText = offset > 0 ? newText.slice(editPosition, editPosition + offset) : '';
+    const removedText = offset < 0 ? oldText.slice(editPosition, editPosition - offset) : '';
+
+    let newManualEdits = [...manualEdits];
+    let merged = false;
+
+    if (isConsecutive && lastEdit && !lastEdit.isUndone) {
+        // Case 1: Typing (appending characters)
+        // e.g. "Hell" -> "Hello" (pos 4, add 'o')
+        if (offset > 0 && addedText.length > 0 && editPosition === lastEdit.position + (lastEdit.addedText?.length || 0)) {
+            lastEdit.addedText = (lastEdit.addedText || '') + addedText;
+            lastEdit.newText = newText;
+            lastEdit.redactedItemsAfter = redactedItemsAfter;
+            lastEdit.timestamp = timestamp;
+            merged = true;
+        }
+        // Case 2: Backspacing recently added characters (including block undo via Ctrl+Z)
+        // e.g. "Hello" -> "Hell" (pos 4, remove 'o') where 'o' was just added
+        // or "Hello" -> "" (pos 0, remove 'Hello') where 'Hello' was just added
+        else if (offset < 0 && removedText.length > 0 && lastEdit.addedText && lastEdit.addedText.length > 0) {
+            const expectedPos = lastEdit.position + lastEdit.addedText.length - removedText.length;
+
+            // Check if we are removing from the end of what was added
+            if (editPosition === expectedPos) {
+                lastEdit.addedText = lastEdit.addedText.slice(0, -removedText.length);
+                lastEdit.newText = newText;
+                lastEdit.redactedItemsAfter = redactedItemsAfter;
+                lastEdit.timestamp = timestamp;
+
+                // If we removed everything we added and didn't remove anything original, remove the edit
+                if (!lastEdit.addedText && !lastEdit.removedText) {
+                    newManualEdits.pop();
+                }
+                merged = true;
+            }
+        }
+        // Case 3: Continuous deletion of original text (Backspace key)
+        // e.g. "Hello" -> "Hell" (pos 4, remove 'o') -> "Hel" (pos 3, remove 'l')
+        else if (offset < 0 && removedText.length === 1 && editPosition === lastEdit.position - 1) {
+            lastEdit.position = editPosition;
+            lastEdit.removedText = removedText + (lastEdit.removedText || '');
+            lastEdit.newText = newText;
+            lastEdit.redactedItemsAfter = redactedItemsAfter;
+            lastEdit.timestamp = timestamp;
+            merged = true;
+        }
+        // Case 4: Continuous deletion of original text (Delete key)
+        // e.g. "Hello" -> "ello" (pos 0, remove 'H') -> "llo" (pos 0, remove 'e')
+        else if (offset < 0 && removedText.length === 1 && editPosition === lastEdit.position) {
+            lastEdit.removedText = (lastEdit.removedText || '') + removedText;
+            lastEdit.newText = newText;
+            lastEdit.redactedItemsAfter = redactedItemsAfter;
+            lastEdit.timestamp = timestamp;
+            merged = true;
+        }
+    }
+
+    if (!merged) {
+        // Create new edit
+        newManualEdits.push({
+            type: 'Manual Edit',
+            timestamp,
+            position: editPosition,
+            addedText,
+            removedText,
+            originalText: oldText,
+            newText: newText,
+            redactedItemsBefore: redactedItemsBefore,
+            redactedItemsAfter: redactedItemsAfter,
+            isUndone: false
+        });
+    } else {
+        // Update the edits list with the modified last edit
+        newManualEdits = [...newManualEdits];
+    }
+
+    return newManualEdits;
 };
 
 // Adjust redaction positions after text edits

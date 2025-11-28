@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cloud, X, Check, FileText, Edit2, Shield, AlertTriangle, RotateCcw, Trash2, Redo } from 'lucide-react';
-import { extractContent, redactPII, adjustRedactionPositions } from '../utils/fileProcessor';
+import { extractContent, redactPII, adjustRedactionPositions, processManualEdit } from '../utils/fileProcessor';
 
 export default function FileUpload({ setLoading }) {
   const [dragActive, setDragActive] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [reviewing, setReviewing] = useState(false);
-  const [currentFile, setCurrentFile] = useState(null);
   const [extractedText, setExtractedText] = useState('');
   const [redactedItems, setRedactedItems] = useState([]);
+  const [manualEdits, setManualEdits] = useState([]);
   const [originalFileName, setOriginalFileName] = useState('');
   const [previousText, setPreviousText] = useState('');
   const [confirmRemove, setConfirmRemove] = useState(null);
@@ -64,8 +64,9 @@ export default function FileUpload({ setLoading }) {
 
       setProcessing(false);
       setExtractedText(redactedText);
+      setPreviousText(redactedText);
       setRedactedItems(items);
-      setCurrentFile(file);
+      setManualEdits([]);
       setLoading(false);
 
       // Use setTimeout to ensure state updates are processed
@@ -124,7 +125,7 @@ export default function FileUpload({ setLoading }) {
     setReviewing(false);
     setExtractedText('');
     setRedactedItems([]);
-    setCurrentFile(null);
+    setManualEdits([]);
     setLoading(false);
   };
 
@@ -152,8 +153,28 @@ export default function FileUpload({ setLoading }) {
     // Calculate offset
     const offset = newText.length - oldText.length;
 
+
+
     // Adjust redaction positions
     const updatedItems = adjustRedactionPositions(redactedItems, editPosition, offset);
+
+    // Track manual edit if there's actual change
+    if (offset !== 0) {
+      // Filter out any undone edits from the end (linear history)
+      // If we edit while some items are undone, those undone items are lost
+      const activeEdits = manualEdits.filter(edit => !edit.isUndone);
+
+      const newManualEdits = processManualEdit(
+        activeEdits,
+        newText,
+        oldText,
+        editPosition,
+        offset,
+        redactedItems, // Before
+        updatedItems   // After
+      );
+      setManualEdits(newManualEdits);
+    }
 
     setExtractedText(newText);
     setPreviousText(newText);
@@ -229,9 +250,14 @@ export default function FileUpload({ setLoading }) {
     let newText = currentText;
     let offset = 0;
 
+    // Always restore original text when removing
     if (isRedacted) {
       newText = currentText.slice(0, item.start) + item.original + currentText.slice(item.end);
       offset = item.original.length - (item.end - item.start);
+    } else {
+      // If already unredacted, just remove from list (text already shows original)
+      newText = currentText;
+      offset = 0;
     }
 
     const updatedItems = redactedItems
@@ -249,20 +275,87 @@ export default function FileUpload({ setLoading }) {
     setConfirmRemove(null);
   };
 
+  const handleUndoManualEdit = (index, e) => {
+    e.stopPropagation();
+    const edit = manualEdits[index];
+
+    // Restore the original text from before this edit
+    setExtractedText(edit.originalText);
+    setPreviousText(edit.originalText);
+
+    // Restore redacted items state if available
+    if (edit.redactedItemsBefore) {
+      setRedactedItems(edit.redactedItemsBefore);
+    }
+
+    // Mark this edit and all subsequent edits as undone
+    const newEdits = manualEdits.map((item, i) => {
+      if (i >= index) return { ...item, isUndone: true };
+      return item;
+    });
+    setManualEdits(newEdits);
+  };
+
+  const handleRedoManualEdit = (index, e) => {
+    e.stopPropagation();
+    // Can only redo if previous edit is active (or index is 0)
+    if (index > 0 && manualEdits[index - 1].isUndone) {
+      // Optionally auto-redo previous ones, but for now just block
+      return;
+    }
+
+    const edit = manualEdits[index];
+    setExtractedText(edit.newText);
+    setPreviousText(edit.newText);
+
+    if (edit.redactedItemsAfter) {
+      setRedactedItems(edit.redactedItemsAfter);
+    }
+
+    // Mark this edit as active
+    const newEdits = manualEdits.map((item, i) => {
+      if (i === index) return { ...item, isUndone: false };
+      return item;
+    });
+    setManualEdits(newEdits);
+  };
+
+  const handleRemoveManualEdit = (index, e) => {
+    e.stopPropagation();
+    setConfirmRemove({ index, item: manualEdits[index], type: 'edit' });
+  };
+
+  const confirmRemoveManualEdit = (e) => {
+    e.stopPropagation();
+    if (!confirmRemove || confirmRemove.type !== 'edit') return;
+
+    const { index } = confirmRemove;
+
+    // Just remove the edit from the list (stop tracking it)
+    // Do NOT revert the text, as that would break subsequent edits
+    // and the user likely just wants to remove the entry from the sidebar.
+    setManualEdits(manualEdits.filter((_, i) => i !== index));
+    setConfirmRemove(null);
+  };
+
   const handleItemClick = (item) => {
     if (textareaRef.current) {
+      let start, end;
+
+      if (item.type === 'Manual Edit') {
+        start = item.position;
+        // If text was added, highlight it. If deleted, just cursor at position.
+        end = item.position + (item.addedText ? item.addedText.length : 0);
+      } else {
+        start = item.start;
+        end = item.end;
+      }
+
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(item.start, item.end);
-
-      // Calculate scroll position to center the selection
-      // This is a simple approximation. For better accuracy, we might need more complex logic
-      // or rely on the browser's default behavior when focusing selection.
-      // However, setSelectionRange often scrolls into view automatically.
-
-      // Let's try blur and focus to force scroll if needed, though setSelectionRange usually works.
+      textareaRef.current.setSelectionRange(start, end);
       textareaRef.current.blur();
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(item.start, item.end);
+      textareaRef.current.setSelectionRange(start, end);
     }
   };
 
@@ -378,75 +471,161 @@ export default function FileUpload({ setLoading }) {
                 />
               </div>
 
-              {redactedItems.length > 0 && (
-                <div className="w-80 bg-black/20 border border-white/10 rounded-xl p-4 flex flex-col gap-3 overflow-hidden">
-                  <div className="flex items-center gap-2 text-amber-400 font-medium pb-2 border-b border-white/10">
-                    <Shield className="w-4 h-4" />
-                    <span>Redacted Items ({redactedItems.length})</span>
+              {(redactedItems.length >= 0 || manualEdits.length > 0) && (
+                <div className="w-80 bg-black/20 border border-white/10 rounded-xl flex flex-col overflow-hidden">
+                  <div className="p-4 border-b border-white/10 bg-white/5">
+                    <h4 className="text-white font-medium flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-cyan-300" />
+                      Changes & Redactions
+                    </h4>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-2">
-                    {redactedItems.map((item, index) => (
-                      <div
-                        key={index}
-                        onClick={() => handleItemClick(item)}
-                        className="bg-white/5 rounded-lg p-3 text-xs border border-white/5 hover:border-cyan-300/50 hover:bg-white/10 transition-all cursor-pointer group"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-white/40 uppercase tracking-wider text-[10px] group-hover:text-cyan-300/70 transition-colors">{item.type}</span>
-                          <AlertTriangle className="w-3 h-3 text-amber-400/50 group-hover:text-amber-400 transition-colors" />
+                  <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6">
+                    {redactedItems.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-amber-400 font-medium text-xs uppercase tracking-wider">
+                          <Shield className="w-3 h-3" />
+                          <span>Redacted Items ({redactedItems.length})</span>
                         </div>
-                        <div className="text-white/80 font-mono break-all group-hover:text-white transition-colors mb-2">
-                          {item.original}
-                        </div>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={(e) => handleUndoRedaction(index, e)}
-                            className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/50 text-white/60 hover:text-blue-400 transition-all text-[10px]"
-                            title={item.isRedacted !== false ? "Restore original text" : "Redact again"}
-                          >
-                            {item.isRedacted !== false ? (
-                              <>
-                                <RotateCcw className="w-3 h-3" />
-                                <span>Undo</span>
-                              </>
-                            ) : (
-                              <>
-                                <Redo className="w-3 h-3" />
-                                <span>Redo</span>
-                              </>
-                            )}
-                          </button>
-                          {confirmRemove?.index === index ? (
-                            <div className="flex-1 flex gap-1 animate-in fade-in duration-200">
-                              <button
-                                onClick={confirmRemoveRedaction}
-                                className="flex-1 flex items-center justify-center p-1 rounded bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 transition-all"
-                                title="Confirm remove"
-                              >
-                                <Check className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={cancelRemoveRedaction}
-                                className="flex-1 flex items-center justify-center p-1 rounded bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition-all"
-                                title="Cancel"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={(e) => handleRemoveRedaction(index, e)}
-                              className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-white/60 hover:text-red-400 transition-all text-[10px]"
-                              title="Permanently remove"
+                        <div className="flex flex-col gap-2">
+                          {redactedItems.map((item, index) => (
+                            <div
+                              key={index}
+                              onClick={() => handleItemClick(item)}
+                              className="bg-white/5 rounded-lg p-3 text-xs border border-white/5 hover:border-cyan-300/50 hover:bg-white/10 transition-all cursor-pointer group"
                             >
-                              <Trash2 className="w-3 h-3" />
-                              <span>Remove</span>
-                            </button>
-                          )}
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-white/40 uppercase tracking-wider text-[10px] group-hover:text-cyan-300/70 transition-colors">{item.type}</span>
+                                <AlertTriangle className="w-3 h-3 text-amber-400/50 group-hover:text-amber-400 transition-colors" />
+                              </div>
+                              <div className="text-white/80 font-mono break-all group-hover:text-white transition-colors mb-2">
+                                {item.original}
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={(e) => handleUndoRedaction(index, e)}
+                                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/50 text-white/60 hover:text-blue-400 transition-all text-[10px]"
+                                  title={item.isRedacted !== false ? "Restore original text" : "Redact again"}
+                                >
+                                  {item.isRedacted !== false ? (
+                                    <>
+                                      <RotateCcw className="w-3 h-3" />
+                                      <span>Undo</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Redo className="w-3 h-3" />
+                                      <span>Redo</span>
+                                    </>
+                                  )}
+                                </button>
+                                {confirmRemove?.index === index && !confirmRemove?.type ? (
+                                  <div className="flex-1 flex gap-1 animate-in fade-in duration-200">
+                                    <button
+                                      onClick={confirmRemoveRedaction}
+                                      className="flex-1 flex items-center justify-center p-1 rounded bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 transition-all"
+                                      title="Confirm remove"
+                                    >
+                                      <Check className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={cancelRemoveRedaction}
+                                      className="flex-1 flex items-center justify-center p-1 rounded bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition-all"
+                                      title="Cancel"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={(e) => handleRemoveRedaction(index, e)}
+                                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-white/60 hover:text-red-400 transition-all text-[10px]"
+                                    title="Permanently remove"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>Remove</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    ))}
+                    )}
+
+                    {manualEdits.length > 0 && (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-blue-400 font-medium text-xs uppercase tracking-wider">
+                          <Edit2 className="w-3 h-3" />
+                          <span>Manual Edits ({manualEdits.length})</span>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                          {manualEdits.map((edit, index) => (
+                            <div
+                              key={edit.timestamp}
+                              className={`bg-white/5 rounded-lg p-3 text-xs border border-white/5 hover:border-blue-300/50 hover:bg-white/10 transition-all group ${edit.isUndone ? 'opacity-50' : ''}`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-white/40 uppercase tracking-wider text-[10px] group-hover:text-blue-300/70 transition-colors">Edit #{index + 1}</span>
+                                <Edit2 className="w-3 h-3 text-blue-400/50 group-hover:text-blue-400 transition-colors" />
+                              </div>
+                              <div className="text-white/60 font-mono text-[10px] mb-2 break-all">
+                                {edit.removedText && <div className="text-red-400">- {edit.removedText.slice(0, 50)}{edit.removedText.length > 50 ? '...' : ''}</div>}
+                                {edit.addedText && <div className="text-green-400">+ {edit.addedText.slice(0, 50)}{edit.addedText.length > 50 ? '...' : ''}</div>}
+                              </div>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={(e) => edit.isUndone ? handleRedoManualEdit(index, e) : handleUndoManualEdit(index, e)}
+                                  className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/50 text-white/60 hover:text-blue-400 transition-all text-[10px]"
+                                  title={edit.isUndone ? "Redo this edit" : "Undo this edit and all subsequent edits"}
+                                  disabled={edit.isUndone && index > 0 && manualEdits[index - 1].isUndone}
+                                >
+                                  {edit.isUndone ? (
+                                    <>
+                                      <Redo className="w-3 h-3" />
+                                      <span>Redo</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <RotateCcw className="w-3 h-3" />
+                                      <span>Undo</span>
+                                    </>
+                                  )}
+                                </button>
+                                {confirmRemove?.index === index && confirmRemove?.type === 'edit' ? (
+                                  <div className="flex-1 flex gap-1 animate-in fade-in duration-200">
+                                    <button
+                                      onClick={confirmRemoveManualEdit}
+                                      className="flex-1 flex items-center justify-center p-1 rounded bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 transition-all"
+                                      title="Confirm remove"
+                                    >
+                                      <Check className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={cancelRemoveRedaction}
+                                      className="flex-1 flex items-center justify-center p-1 rounded bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white transition-all"
+                                      title="Cancel"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={(e) => handleRemoveManualEdit(index, e)}
+                                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1 rounded bg-white/5 hover:bg-red-500/20 border border-white/10 hover:border-red-500/50 text-white/60 hover:text-red-400 transition-all text-[10px]"
+                                    title="Remove from tracking"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>Remove</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

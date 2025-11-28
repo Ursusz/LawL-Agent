@@ -29,8 +29,7 @@ test.describe('File Upload and Processing', () => {
         expect(extractedText).toContain('plain text test file');
 
         // Verify PII is redacted
-        expect(extractedText).toContain('[EMAIL REDACTED]');
-        expect(extractedText).toContain('[PHONE REDACTED]');
+        expect(extractedText).toContain('[REDACTED]');
         expect(extractedText).not.toContain('user@domain.com');
         expect(extractedText).not.toContain('0723 456 789');
     });
@@ -54,8 +53,7 @@ test.describe('File Upload and Processing', () => {
         expect(extractedText).toContain('## Personal Information');
 
         // Verify PII is redacted  
-        expect(extractedText).toContain('[EMAIL REDACTED]');
-        expect(extractedText).toContain('[PHONE REDACTED]');
+        expect(extractedText).toContain('[REDACTED]');
         expect(extractedText).not.toContain('test.user@example.com');
         expect(extractedText).not.toContain('+40 712 345 678');
         expect(extractedText).not.toContain('admin@test.org');
