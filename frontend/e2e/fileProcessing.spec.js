@@ -1,11 +1,16 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
+import { collectCoverage } from './helpers/coverage';
 
 test.describe('File Upload and Processing', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('http://localhost:3000');
         // Wait for the FileUpload component's title (the styled one)
         await page.waitForSelector('h1.text-5xl', { timeout: 50000 });
+    });
+
+    test.afterEach(async ({ page }) => {
+        await collectCoverage(page);
     });
 
     test('should upload and process a TXT file', async ({ page }) => {

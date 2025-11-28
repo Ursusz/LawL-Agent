@@ -80,5 +80,22 @@ module.exports = function override(config, env) {
     // Ignore source map warnings for dependencies if needed
     config.ignoreWarnings = [/Failed to parse source map/];
 
+    // Add babel-plugin-istanbul for coverage when REACT_APP_COVERAGE is true
+    if (process.env.REACT_APP_COVERAGE === 'true') {
+        // Find the babel loader
+        const babelLoader = config.module.rules.find(
+            rule => rule.oneOf
+        )?.oneOf.find(
+            rule => rule.loader && rule.loader.includes('babel-loader')
+        );
+
+        if (babelLoader) {
+            if (!babelLoader.options.plugins) {
+                babelLoader.options.plugins = [];
+            }
+            babelLoader.options.plugins.push('babel-plugin-istanbul');
+        }
+    }
+
     return config;
 };

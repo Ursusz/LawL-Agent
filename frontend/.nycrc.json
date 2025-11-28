@@ -1,0 +1,17 @@
+{
+    "all": true,
+    "include": [
+        "src/**/*.{js,jsx,ts,tsx}"
+    ],
+    "exclude": [
+        "src/**/*.test.{js,jsx,ts,tsx}",
+        "src/setupTests.js",
+        "src/reportWebVitals.js",
+        "src/index.js"
+    ],
+    "reporter": [
+        "html",
+        "text",
+        "lcov"
+    ]
+}
