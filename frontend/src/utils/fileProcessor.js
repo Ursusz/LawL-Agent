@@ -493,6 +493,7 @@ export const redactPII = (text) => {
         redactedItems.push({
             type: m.type,
             original: m.original,
+            replacement: m.replacement,
             start: newStart,
             end: newEnd
         });

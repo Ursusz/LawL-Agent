@@ -161,11 +161,11 @@ export default function FileUpload({ setLoading }) {
     const currentText = extractedText;
     const isRedacted = item.isRedacted !== false; // Default to true
 
-    // Use the stored replacement if available, otherwise fallback based on type
-    const redactionMarker = item.replacement || (item.type === 'Email' ? '[EMAIL REDACTED]' : '[PHONE REDACTED]');
+    // Use the stored replacement text (e.g., "CNP: [REDACTED]" or just "[REDACTED]")
+    const redactionMarker = item.replacement || '[REDACTED]';
 
     if (isRedacted) {
-      // Undo: Replace marker with original
+      // Undo: Replace redacted text with original
       const newText = currentText.slice(0, item.start) + item.original + currentText.slice(item.end);
       const offset = item.original.length - redactionMarker.length;
 
@@ -183,7 +183,7 @@ export default function FileUpload({ setLoading }) {
       setPreviousText(newText);
       setRedactedItems(updatedItems);
     } else {
-      // Redo: Replace original with marker
+      // Redo: Replace original with redacted text
       const newText = currentText.slice(0, item.start) + redactionMarker + currentText.slice(item.end);
       const offset = redactionMarker.length - item.original.length;
 
