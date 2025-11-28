@@ -62,7 +62,7 @@ module.exports = function override(config, env) {
         }),
     ];
 
-    // Exclude generalWorker from minification to avoid \"Unexpected token import\" errors
+    // Exclude generalWorker from minification to avoid "Unexpected token import" errors
     if (config.optimization && config.optimization.minimizer) {
         config.optimization.minimizer.forEach(minimizer => {
             if (minimizer.constructor.name === 'TerserPlugin') {
