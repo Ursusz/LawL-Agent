@@ -8,6 +8,7 @@ export default function FileUpload({ setLoading }) {
   const [processing, setProcessing] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [extractedText, setExtractedText] = useState('');
+  const [initialExtractedText, setInitialExtractedText] = useState('');
   const [redactedItems, setRedactedItems] = useState([]);
   const [manualEdits, setManualEdits] = useState([]);
   const [originalFileName, setOriginalFileName] = useState('');
@@ -64,6 +65,7 @@ export default function FileUpload({ setLoading }) {
 
       setProcessing(false);
       setExtractedText(redactedText);
+      setInitialExtractedText(redactedText);
       setPreviousText(redactedText);
       setRedactedItems(items);
       setManualEdits([]);
@@ -171,7 +173,8 @@ export default function FileUpload({ setLoading }) {
         editPosition,
         offset,
         redactedItems, // Before
-        updatedItems   // After
+        updatedItems,   // After
+        initialExtractedText // Initial text for original tracking
       );
       setManualEdits(newManualEdits);
     }
@@ -279,11 +282,37 @@ export default function FileUpload({ setLoading }) {
     e.stopPropagation();
     const edit = manualEdits[index];
 
-    // Restore the original text from before this edit
-    setExtractedText(edit.originalText);
-    setPreviousText(edit.originalText);
+    // Simply restore the text state from before this edit
+    // This is stored in redactedItemsBefore's corresponding text state
+    // We need to reconstruct the text by undoing this edit
 
-    // Restore redacted items state if available
+    // Find the text state before this edit by looking at previous edit's after state
+    // or initial state if this is the first edit
+    let textBeforeThisEdit;
+    if (index === 0) {
+      textBeforeThisEdit = initialExtractedText;
+    } else {
+      // Get the text after the previous edit
+      const prevEdit = manualEdits[index - 1];
+      if (prevEdit.isUndone) {
+        // Previous edit is undone, can't redo this one
+        return;
+      }
+      // We need to reconstruct by applying all active edits up to index-1
+      textBeforeThisEdit = initialExtractedText;
+      for (let i = 0; i < index; i++) {
+        const e = manualEdits[i];
+        if (!e.isUndone) {
+          // Apply edit: remove original, insert replacement
+          textBeforeThisEdit = textBeforeThisEdit.slice(0, e.start) + e.replacement + textBeforeThisEdit.slice(e.start + e.original.length);
+        }
+      }
+    }
+
+    setExtractedText(textBeforeThisEdit);
+    setPreviousText(textBeforeThisEdit);
+
+    // Restore redacted items
     if (edit.redactedItemsBefore) {
       setRedactedItems(edit.redactedItemsBefore);
     }
@@ -298,16 +327,24 @@ export default function FileUpload({ setLoading }) {
 
   const handleRedoManualEdit = (index, e) => {
     e.stopPropagation();
-    // Can only redo if previous edit is active (or index is 0)
     if (index > 0 && manualEdits[index - 1].isUndone) {
-      // Optionally auto-redo previous ones, but for now just block
       return;
     }
 
     const edit = manualEdits[index];
-    setExtractedText(edit.newText);
-    setPreviousText(edit.newText);
 
+    // Reconstruct text by applying all active edits up to and including this one
+    let textAfterThisEdit = initialExtractedText;
+    for (let i = 0; i <= index; i++) {
+      const e = manualEdits[i];
+      // Apply edit: remove original, insert replacement
+      textAfterThisEdit = textAfterThisEdit.slice(0, e.start) + e.replacement + textAfterThisEdit.slice(e.start + e.original.length);
+    }
+
+    setExtractedText(textAfterThisEdit);
+    setPreviousText(textAfterThisEdit);
+
+    // Restore redacted items
     if (edit.redactedItemsAfter) {
       setRedactedItems(edit.redactedItemsAfter);
     }
@@ -330,32 +367,32 @@ export default function FileUpload({ setLoading }) {
     if (!confirmRemove || confirmRemove.type !== 'edit') return;
 
     const { index } = confirmRemove;
+    const edit = manualEdits[index];
+    const currentText = extractedText;
 
-    // Just remove the edit from the list (stop tracking it)
-    // Do NOT revert the text, as that would break subsequent edits
-    // and the user likely just wants to remove the entry from the sidebar.
+    // Restore original text at [start, end]
+    const newText = currentText.slice(0, edit.start) + edit.original + currentText.slice(edit.end);
+    const offset = edit.original.length - (edit.end - edit.start);
+
+    // Adjust redacted items
+    const updatedItems = adjustRedactionPositions(edit.redactedItemsBefore || redactedItems, edit.start, offset);
+
+    setExtractedText(newText);
+    setPreviousText(newText);
+    setRedactedItems(updatedItems);
+
+    // Remove from list
     setManualEdits(manualEdits.filter((_, i) => i !== index));
     setConfirmRemove(null);
   };
 
   const handleItemClick = (item) => {
     if (textareaRef.current) {
-      let start, end;
-
-      if (item.type === 'Manual Edit') {
-        start = item.position;
-        // If text was added, highlight it. If deleted, just cursor at position.
-        end = item.position + (item.addedText ? item.addedText.length : 0);
-      } else {
-        start = item.start;
-        end = item.end;
-      }
-
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(start, end);
+      textareaRef.current.setSelectionRange(item.start, item.end);
       textareaRef.current.blur();
       textareaRef.current.focus();
-      textareaRef.current.setSelectionRange(start, end);
+      textareaRef.current.setSelectionRange(item.start, item.end);
     }
   };
 
@@ -564,15 +601,16 @@ export default function FileUpload({ setLoading }) {
                           {manualEdits.map((edit, index) => (
                             <div
                               key={edit.timestamp}
-                              className={`bg-white/5 rounded-lg p-3 text-xs border border-white/5 hover:border-blue-300/50 hover:bg-white/10 transition-all group ${edit.isUndone ? 'opacity-50' : ''}`}
+                              onClick={() => handleItemClick(edit)}
+                              className={`bg-white/5 rounded-lg p-3 text-xs border border-white/5 hover:border-blue-300/50 hover:bg-white/10 transition-all cursor-pointer group ${edit.isUndone ? 'opacity-50' : ''}`}
                             >
                               <div className="flex items-center justify-between mb-1">
                                 <span className="text-white/40 uppercase tracking-wider text-[10px] group-hover:text-blue-300/70 transition-colors">Edit #{index + 1}</span>
                                 <Edit2 className="w-3 h-3 text-blue-400/50 group-hover:text-blue-400 transition-colors" />
                               </div>
                               <div className="text-white/60 font-mono text-[10px] mb-2 break-all">
-                                {edit.removedText && <div className="text-red-400">- {edit.removedText.slice(0, 50)}{edit.removedText.length > 50 ? '...' : ''}</div>}
-                                {edit.addedText && <div className="text-green-400">+ {edit.addedText.slice(0, 50)}{edit.addedText.length > 50 ? '...' : ''}</div>}
+                                {edit.original && <div className="text-red-400">- {edit.original.slice(0, 50)}{edit.original.length > 50 ? '...' : ''}</div>}
+                                {edit.replacement && <div className="text-green-400">+ {edit.replacement.slice(0, 50)}{edit.replacement.length > 50 ? '...' : ''}</div>}
                               </div>
                               <div className="flex gap-1">
                                 <button

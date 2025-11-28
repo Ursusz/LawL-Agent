@@ -489,16 +489,16 @@ describe('fileProcessor', () => {
         it('should create a new edit when list is empty', () => {
             Date.now = jest.fn(() => 1000);
             const edits = [];
-            const result = processManualEdit(edits, 'a', '', 0, 1, [], []);
+            const result = processManualEdit(edits, 'a', '', 0, 1, [], [], '');
 
             expect(result).toHaveLength(1);
             expect(result[0]).toMatchObject({
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 0,
-                addedText: 'a',
-                removedText: '',
-                newText: 'a'
+                start: 0,
+                end: 1,
+                original: '',
+                replacement: 'a'
             });
         });
 
@@ -507,19 +507,18 @@ describe('fileProcessor', () => {
             const edits = [{
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 0,
-                addedText: 'H',
-                removedText: '',
-                newText: 'H'
+                start: 0,
+                end: 1,
+                original: '',
+                replacement: 'H'
             }];
 
-            Date.now = jest.fn(() => 1100); // 100ms later
-            const result = processManualEdit(edits, 'He', 'H', 1, 1, [], []);
+            Date.now = jest.fn(() => 1100);
+            const result = processManualEdit(edits, 'He', 'H', 1, 1, [], [], '');
 
             expect(result).toHaveLength(1);
-            expect(result[0].addedText).toBe('He');
-            expect(result[0].newText).toBe('He');
-            expect(result[0].timestamp).toBe(1100);
+            expect(result[0].replacement).toBe('He');
+            expect(result[0].end).toBe(2);
         });
 
         it('should merge even if time difference > 2s (no time limit)', () => {
@@ -527,17 +526,17 @@ describe('fileProcessor', () => {
             const edits = [{
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 0,
-                addedText: 'H',
-                removedText: '',
-                newText: 'H'
+                start: 0,
+                end: 1,
+                original: '',
+                replacement: 'H'
             }];
 
-            Date.now = jest.fn(() => 3500); // 2.5s later
-            const result = processManualEdit(edits, 'He', 'H', 1, 1, [], []);
+            Date.now = jest.fn(() => 3500);
+            const result = processManualEdit(edits, 'He', 'H', 1, 1, [], [], '');
 
             expect(result).toHaveLength(1);
-            expect(result[0].addedText).toBe('He');
+            expect(result[0].replacement).toBe('He');
         });
 
         it('should merge backspace on recently added text', () => {
@@ -545,19 +544,18 @@ describe('fileProcessor', () => {
             const edits = [{
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 0,
-                addedText: 'Hi',
-                removedText: '',
-                newText: 'Hi'
+                start: 0,
+                end: 2,
+                original: '',
+                replacement: 'Hi'
             }];
 
             Date.now = jest.fn(() => 1100);
-            // Backspace 'i' (pos 1, length 1)
-            const result = processManualEdit(edits, 'H', 'Hi', 1, -1, [], []);
+            const result = processManualEdit(edits, 'H', 'Hi', 1, -1, [], [], '');
 
             expect(result).toHaveLength(1);
-            expect(result[0].addedText).toBe('H');
-            expect(result[0].newText).toBe('H');
+            expect(result[0].replacement).toBe('H');
+            expect(result[0].end).toBe(1);
         });
 
         it('should handle block undo (Ctrl+Z) as backspace', () => {
@@ -565,17 +563,16 @@ describe('fileProcessor', () => {
             const edits = [{
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 0,
-                addedText: 'Hello',
-                removedText: '',
-                newText: 'Hello'
+                start: 0,
+                end: 5,
+                original: '',
+                replacement: 'Hello'
             }];
 
             Date.now = jest.fn(() => 1100);
-            // Undo "Hello" -> "" (pos 0, remove 5 chars)
-            const result = processManualEdit(edits, '', 'Hello', 0, -5, [], []);
+            const result = processManualEdit(edits, '', 'Hello', 0, -5, [], [], '');
 
-            expect(result).toHaveLength(0); // Should completely remove the edit
+            expect(result).toHaveLength(0);
         });
 
         it('should remove edit if all added text is backspaced', () => {
@@ -583,15 +580,14 @@ describe('fileProcessor', () => {
             const edits = [{
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 0,
-                addedText: 'H',
-                removedText: '',
-                newText: 'H'
+                start: 0,
+                end: 1,
+                original: '',
+                replacement: 'H'
             }];
 
             Date.now = jest.fn(() => 1100);
-            // Backspace 'H'
-            const result = processManualEdit(edits, '', 'H', 0, -1, [], []);
+            const result = processManualEdit(edits, '', 'H', 0, -1, [], [], '');
 
             expect(result).toHaveLength(0);
         });
@@ -601,67 +597,185 @@ describe('fileProcessor', () => {
             const edits = [{
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 0,
-                addedText: 'A',
-                removedText: '',
-                newText: 'A'
+                start: 0,
+                end: 1,
+                original: '',
+                replacement: 'A'
             }];
 
             Date.now = jest.fn(() => 1100);
-            // Insert 'B' at position 5 (not 1)
-            const result = processManualEdit(edits, 'A    B', 'A    ', 5, 1, [], []);
+            const result = processManualEdit(edits, 'A    B', 'A    ', 5, 1, [], [], 'A    ');
 
             expect(result).toHaveLength(2);
         });
 
         it('should merge consecutive deletions (Backspace)', () => {
             Date.now = jest.fn(() => 1000);
-            // Initial state: "Hello" -> "Hell" (deleted 'o')
             const edits = [{
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 4,
-                addedText: '',
-                removedText: 'o',
-                originalText: 'Hello',
-                newText: 'Hell'
+                start: 4,
+                end: 4,
+                original: 'o',
+                replacement: ''
             }];
 
             Date.now = jest.fn(() => 1100);
-            // Backspace 'l' (pos 3)
-            // oldText: "Hell", newText: "Hel"
-            const result = processManualEdit(edits, 'Hel', 'Hell', 3, -1, [], []);
+            const result = processManualEdit(edits, 'Hel', 'Hell', 3, -1, [], [], 'Hello');
 
             expect(result).toHaveLength(1);
-            expect(result[0].removedText).toBe('lo'); // 'l' + 'o'
-            expect(result[0].position).toBe(3);
-            expect(result[0].newText).toBe('Hel');
-            expect(result[0].originalText).toBe('Hello');
+            expect(result[0].original).toBe('lo');
+            expect(result[0].start).toBe(3);
         });
 
         it('should merge consecutive deletions (Delete key)', () => {
             Date.now = jest.fn(() => 1000);
-            // Initial state: "Hello" -> "ello" (deleted 'H' at 0)
             const edits = [{
                 type: 'Manual Edit',
                 timestamp: 1000,
-                position: 0,
-                addedText: '',
-                removedText: 'H',
-                originalText: 'Hello',
-                newText: 'ello'
+                start: 0,
+                end: 0,
+                original: 'H',
+                replacement: ''
             }];
 
             Date.now = jest.fn(() => 1100);
-            // Delete 'e' (pos 0)
-            // oldText: "ello", newText: "llo"
-            const result = processManualEdit(edits, 'llo', 'ello', 0, -1, [], []);
+            const result = processManualEdit(edits, 'llo', 'ello', 0, -1, [], [], 'Hello');
 
             expect(result).toHaveLength(1);
-            expect(result[0].removedText).toBe('He'); // 'H' + 'e'
-            expect(result[0].position).toBe(0);
-            expect(result[0].newText).toBe('llo');
-            expect(result[0].originalText).toBe('Hello');
+            expect(result[0].original).toBe('He');
+            expect(result[0].start).toBe(0);
+        });
+
+        it('should track start/end positions like redactions', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [];
+            // Type "Hello" at position 0
+            const result = processManualEdit(edits, 'Hello', '', 0, 5, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toMatchObject({
+                start: 0,
+                end: 5,
+                original: '', // What was there before
+                replacement: 'Hello' // What's there now
+            });
+        });
+
+        it('should track deletions with start/end (length 0 replacement)', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [];
+            // Delete "Hello" at position 0
+            const result = processManualEdit(edits, '', 'Hello', 0, -5, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toMatchObject({
+                start: 0,
+                end: 0, // Deletion has 0 length in new text
+                original: 'Hello',
+                replacement: ''
+            });
+        });
+
+        it('should merge edits at consecutive positions', () => {
+            Date.now = jest.fn(() => 1000);
+            // First edit: insert "Hello" at 0
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                start: 0,
+                end: 5,
+                original: '',
+                replacement: 'Hello'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Second edit: insert " World" at position 5 (consecutive)
+            const result = processManualEdit(edits, 'Hello World', 'Hello', 5, 6, [], []);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toMatchObject({
+                start: 0,
+                end: 11,
+                original: '',
+                replacement: 'Hello World'
+            });
+        });
+
+        it('should NOT merge edits at non-consecutive positions', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                start: 0,
+                end: 5,
+                original: '',
+                replacement: 'Hello'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Insert at position 10 (not consecutive to position 5)
+            const result = processManualEdit(edits, 'Hello     World', 'Hello     ', 10, 5, [], []);
+
+            expect(result).toHaveLength(2);
+        });
+
+        it('should remove edit completely if net result is empty', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                start: 0,
+                end: 5,
+                original: '',
+                replacement: 'Hello'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Delete all of "Hello"
+            const result = processManualEdit(edits, '', 'Hello', 0, -5, [], []);
+
+            expect(result).toHaveLength(0);
+        });
+
+        it('should merge deletion from middle of edit', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                start: 0,
+                end: 5,
+                original: '',
+                replacement: 'Hello'
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Delete 'l' from middle (position 2)
+            const result = processManualEdit(edits, 'Helo', 'Hello', 2, -1, [], [], '');
+
+            expect(result).toHaveLength(1);
+            expect(result[0].replacement).toBe('Helo');
+            expect(result[0].end).toBe(4);
+        });
+
+        it('should merge deletion from start of existing edit', () => {
+            Date.now = jest.fn(() => 1000);
+            const edits = [{
+                type: 'Manual Edit',
+                timestamp: 1000,
+                start: 5,
+                end: 5,
+                original: 'World',
+                replacement: ''
+            }];
+
+            Date.now = jest.fn(() => 1100);
+            // Delete more at position 5 (Delete key)
+            const result = processManualEdit(edits, 'Hello', 'Hello ', 5, -1, [], [], 'Hello World');
+
+            expect(result).toHaveLength(1);
+            expect(result[0].original).toBe('World ');
+            expect(result[0].start).toBe(5);
         });
     });
 
