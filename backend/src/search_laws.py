@@ -34,15 +34,17 @@ def fetch_online_reference(law_ref): #find law on brave api and download it
   # brave_search_api -> ia primul site cel mai relevant (+ de incredere), apoi un web scraper extrage continutul si il salveaza intr-un fisier cu numele {referinta_standardizata}
   print("Web scraping")
   print(f"Searching online for reference {law_ref}")
-  brave_search_api.search_law_online(law_ref)
-  fileId = find_cloud_reference(f'{law_ref}.txt')
+  fileId = brave_search_api.search_law_online(law_ref)
+  if fileId is None:
+    fileId = find_cloud_reference(f'{law_ref}.txt')
   print(f"File ID where local ref is now saved -> {fileId}")
   text = ''
+  url = ''
   if fileId is not None:
     # text = extract_text_txt(filepath)
     text, url = fetch_cloud_reference(fileId)
     print("Sucesfully extracted law text from cloud")
-  return text
+  return text, url
 
 def fetch_cloud_reference(fileId): #downloading from gdrive
   print("Cloud Corpus")
@@ -67,7 +69,7 @@ def find_laws(references, document_text):
     if fileId is not None:
       law_text, url = fetch_cloud_reference(fileId) #download from gdrive
     elif len(law_text) == 0:
-      law_text = fetch_online_reference(ref) #browse on brave and scrape the content
+      law_text, url = fetch_online_reference(ref) #browse on brave and scrape the content
 
     if law_text:
       print("Extracting most relevant article")

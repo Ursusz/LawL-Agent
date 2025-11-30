@@ -34,4 +34,5 @@ def search_law_online(reference):
 
   if 'legislatie.just.ro' in urls[0]:
     print(urls[0])
-    web_scraper.get_leg_just_ro_content(urls[0], reference)
+    return web_scraper.get_leg_just_ro_content(urls[0], reference)
+  return None

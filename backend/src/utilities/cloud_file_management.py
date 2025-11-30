@@ -45,9 +45,12 @@ def save_file_in_cloud(file_pth):
         media = MediaFileUpload(file_pth, mimetype='application/octet-stream') 
         
         file = service.files().create(body=file_metadata, media_body=media, fields='id', supportsAllDrives=True).execute()
-        print(f"File with ID-ul: {file.get('id')} was successfully uploaded.")
+        file_id = file.get('id')
+        print(f"File with ID-ul: {file_id} was successfully uploaded.")
+        return file_id
     except HttpError as error:
         print(f"An error occured: {error}")
+        return None
     finally:
         if os.path.exists(file_pth):
             os.remove(file_pth)

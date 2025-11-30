@@ -30,4 +30,4 @@ def get_leg_just_ro_content(url, reference):
   with open(file_saving_location, "w") as file:
     file.write(url + "\n")
     file.write(law)
-  cloud_file_management.save_file_in_cloud(file_saving_location)
+  return cloud_file_management.save_file_in_cloud(file_saving_location)

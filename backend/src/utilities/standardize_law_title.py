@@ -27,7 +27,7 @@ def extract_law_prefix(text: str) -> str:
     act_pattern = re.compile(
         r'\b('
         r'lege|'
-        r'hotarare\s+de\s+guvern|hotarare\s+guvern|hotarare|'
+        r'hotarare\s+de\s+guvern|hotarare\s+guvern|hotarare|hg|'
         r'ordonanta\s+de\s+urgenta|ordonanta|'
         r'oug?|'
         r'ordin|'
@@ -50,7 +50,7 @@ def standardize_law_title(law_title: str) -> str:
     text = lemmatize(law_title)
     text = normalize_text(text)
     
-    prefix_pattern = r'\b(lege|hotarare|decizie|ordin|ordonanta|ou(g)?)\b'
+    prefix_pattern = r'\b(lege|hotarare|decizie|ordin|ordonanta|ou(g)?|hg)\b'
     prefix_match = re.search(prefix_pattern, text)
     if not prefix_match:
         return None
