@@ -76,7 +76,10 @@ def find_laws(references, document_text):
       relevant_article = bm25.get_most_relevant_fragment(law_text=law_text, context=document_text)
       print("Waiting for gemini information")
       gemini_information = gemini_summary.get_gemini_informations_about_law(law_text, relevant_article)
-      print(f"Current gemini info size -> {len(gemini_information)}")
+      if gemini_information:
+        print(f"Current gemini info size -> {len(gemini_information)}")
+      else:
+        print("Gemini returned None")
       # gemini_information[0] -> sumar lege intreaga
       # gemini_information[1] -> lege intreaga simplificata
       # gemini_information[2] -> sumar articol relevant
