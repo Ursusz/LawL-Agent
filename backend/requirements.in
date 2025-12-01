@@ -15,3 +15,5 @@ google-auth-httplib2
 google-auth-oauthlib
 rank-bm25
 stanza
+requests
+lxml

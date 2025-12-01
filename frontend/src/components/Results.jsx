@@ -6,6 +6,33 @@ function parse_law_title(law_title) {
   return (law_title.charAt(0).toUpperCase() + law_title.slice(1).toLowerCase()).replace('_', ' ').replace(/_/g, '/')
 }
 
+function renderTextWithLinks(text) {
+  if (!text) return null;
+
+  // Regex to find URLs (starting with http/https)
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+  const parts = text.split(urlRegex);
+
+  return parts.map((part, index) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a
+          key={index}
+          href={part}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-400 hover:text-blue-300 underline break-all"
+          onClick={(e) => e.stopPropagation()} // Prevent parent click handlers
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
 function Results() {
   const location = useLocation();
   const { results, extractedText } = location.state || {};
@@ -304,9 +331,9 @@ function Results() {
                                         </button>
                                       </div>
                                       {openLawText[lawRef] && (
-                                        <div className="ml-4 mt-2 p-4 rounded text-justify" style={{ backgroundColor: 'hsla(30, 5%, 43%, 0.1)' }}>
-                                          <p style={{ color: 'hsla(30, 5%, 43%, 1)' }}>
-                                            {law_details.law}
+                                        <div className="ml-4 mt-2 p-4 rounded text-justify max-h-96 overflow-y-auto" style={{ backgroundColor: 'hsla(30, 5%, 43%, 0.1)' }}>
+                                          <p style={{ color: 'hsla(30, 5%, 43%, 1)', whiteSpace: 'pre-wrap' }}>
+                                            {renderTextWithLinks(law_details.law)}
                                           </p>
                                         </div>
                                       )}
@@ -340,7 +367,7 @@ function Results() {
                                         </button>
                                       </div>
                                       {openLawSummary[lawRef] && (
-                                        <div className="ml-4 mt-2 p-4 rounded text-justify" style={{ backgroundColor: 'hsla(138, 29%, 25%, 0.1)' }}>
+                                        <div className="ml-4 mt-2 p-4 rounded text-justify max-h-96 overflow-y-auto" style={{ backgroundColor: 'hsla(138, 29%, 25%, 0.1)' }}>
                                           <p style={{ color: 'hsla(30, 5%, 43%, 1)' }}>
                                             {law_details.law_summary}
                                           </p>
@@ -363,6 +390,11 @@ function Results() {
                                           })}
                                         >
                                           📜 Articol Relevant
+                                          {law_details.relevant_article && law_details.relevant_article.includes('(din Anexa)') && (
+                                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                              Anexă
+                                            </span>
+                                          )}
                                         </button>
                                         <button
                                           onClick={() => handleCopy(law_details.relevant_article, `article-${lawRef}`)}
@@ -376,7 +408,7 @@ function Results() {
                                         </button>
                                       </div>
                                       {openArticle[lawRef] && (
-                                        <div className="ml-4 mt-2 p-4 rounded text-justify" style={{ backgroundColor: 'hsla(30, 5%, 43%, 0.1)' }}>
+                                        <div className="ml-4 mt-2 p-4 rounded text-justify max-h-96 overflow-y-auto" style={{ backgroundColor: 'hsla(30, 5%, 43%, 0.1)' }}>
                                           <p style={{ color: 'hsla(30, 5%, 43%, 1)' }}>
                                             {law_details.relevant_article}
                                           </p>
@@ -412,7 +444,7 @@ function Results() {
                                         </button>
                                       </div>
                                       {openSummaryArticle[lawRef] && (
-                                        <div className="ml-4 mt-2 p-4 rounded text-justify" style={{ backgroundColor: 'hsla(138, 29%, 25%, 0.1)' }}>
+                                        <div className="ml-4 mt-2 p-4 rounded text-justify max-h-96 overflow-y-auto" style={{ backgroundColor: 'hsla(138, 29%, 25%, 0.1)' }}>
                                           <p style={{ color: 'hsla(30, 5%, 43%, 1)' }}>
                                             {law_details.articles_summary}
                                           </p>
@@ -448,7 +480,7 @@ function Results() {
                                         </button>
                                       </div>
                                       {openLawSimplified[lawRef] && (
-                                        <div className="ml-4 mt-2 p-4 rounded text-justify" style={{ backgroundColor: 'hsla(138, 29%, 25%, 0.15)' }}>
+                                        <div className="ml-4 mt-2 p-4 rounded text-justify max-h-96 overflow-y-auto" style={{ backgroundColor: 'hsla(138, 29%, 25%, 0.15)' }}>
                                           <p style={{ color: 'hsla(225, 100%, 99%, 1)' }}>
                                             {law_details.law_simplified}
                                           </p>

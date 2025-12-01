@@ -7,87 +7,201 @@ from ..utilities import parse_law_title, standardize_law_title, cloud_file_manag
 # Threshold for determining if a document is "short" and should fetch linked docs
 SHORT_DOCUMENT_THRESHOLD = 2000
 
+def extract_text_with_spacing(element):
+  """Extract text preserving layout (newlines for br and block elements)."""
+  text = []
+  def _process(node):
+    if node.text:
+      text.append(node.text)
+    for child in node:
+      if child.tag == 'br':
+        text.append('\n')
+      elif child.tag in ['p', 'div', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'tr']:
+        text.append('\n')
+        _process(child)
+        text.append('\n')
+      else:
+        _process(child)
+      if child.tail:
+        text.append(child.tail)
+  _process(element)
+  
+  raw_text = "".join(text)
+  
+  import re
+  # Collapse horizontal whitespace (spaces, tabs) to single space
+  raw_text = re.sub(r'[ \t]+', ' ', raw_text)
+  # Collapse multiple newlines to max 2
+  return re.sub(r'\n{3,}', '\n\n', raw_text).strip()
+
 def get_afis_page_content(url):
-  """
-  Extract content from a DetaliiDocumentAfis page.
-  Attempts to extract articles first (like main docs), falls back to raw text.
-  """
   response = requests.get(url)
   tree = html.fromstring(response.content)
   
-  # Try to extract articles first (same as main documents)
+  body = tree.xpath('//body')
+  if not body:
+    return ""
+  
+  # Remove navigation, header, footer, style, and script elements
+  for elem in tree.xpath("//nav | //header | //footer | //div[contains(@class, 'menu')] | //div[@id='menu'] | //style | //script"):
+    parent = elem.getparent()
+    if parent is not None:
+      parent.remove(elem)
+  
+  # 1. Try to find article structure (S_ART_BDY)
   xpath_article_titles = "//*[starts-with(@id, 'id_art') and substring(@id, string-length(@id) - 2, 3) = 'ttl' and not(ancestor::*[contains(@class, 'S_ANX_BDY')])]"
   article_titles = tree.xpath(xpath_article_titles)
   
   xpath_article_contents = "//span[@class='S_ART_BDY']"
   article_contents = tree.xpath(xpath_article_contents)
   
-  # If articles found, extract them (same format as main docs)
   if article_titles and article_contents and len(article_titles) == len(article_contents):
-    content_text = ""
+    law = ""
     for index in range(len(article_titles)):
-      content_text += article_titles[index].text_content() + "\n"
-      content_text += article_contents[index].text_content().replace("...", "") + "\n"
-    return content_text
-  
-  # Fallback: extract using data-list-text chunking (for structured documents)
+      law += article_titles[index].text_content() + "\n" + article_contents[index].text_content().replace("...", "") + "\n"
+    return law
+
+  # 2. Fallback: Structured chunking using data-list-text
   list_items = tree.xpath('//*[@data-list-text]')
   if list_items:
     content_text = ""
-    processed_parents = set()  # Track parent items we've already processed
     
+    # Group items by data-list-text to handle duplicates
+    # The website sometimes has multiple elements with the same data-list-text,
+    # where one is just a title and another has the full content.
+    items_by_id = {}
     for item in list_items:
       list_text = item.get('data-list-text', '')
-      
-      # Skip if this is a nested item (contains a dot beyond first level)
-      # e.g., skip 5.2.1 but process 5.2
-      if list_text.count('.') > 1:
+      if not list_text:
         continue
-      
-      # Check if this item has children (one level of nesting)
-      children = tree.xpath(f'//*[@data-list-text and starts-with(@data-list-text, "{list_text}.")]')
-      
-      # Get item content (exclude nested children content)
-      item_content = item.text_content().strip()
-      
-      # If has children, extract only direct text (not nested)
-      if children:
-        # Mark as processed
-        processed_parents.add(list_text)
         
-        # Add parent header
-        content_text += f"{list_text} "
-        # Get direct text of parent (first line usually)
-        lines = item_content.split('\n')
-        content_text += lines[0].strip() + "\n"
-        
-        # Add children (one level deep only)
-        for child in children:
-          child_list_text = child.get('data-list-text', '')
-          # Only process direct children (e.g., 5.1, 5.2, not 5.2.1)
-          if child_list_text.count('.') == 1:
-            child_content = child.text_content().strip()
-            child_lines = child_content.split('\n')
-            content_text += f"  {child_list_text} {child_lines[0].strip()}\n"
+      # If we already have this ID, check if the new one has more content
+      if list_text in items_by_id:
+        current_len = len(items_by_id[list_text].text_content().strip())
+        new_len = len(item.text_content().strip())
+        if new_len > current_len:
+          items_by_id[list_text] = item
       else:
-        # No children, add as-is (if not already processed as parent)
-        if list_text not in processed_parents:
-          lines = item_content.split('\n')
-          content_text += f"{list_text} {lines[0].strip()}\n"
+        items_by_id[list_text] = item
+    
+    # Get the best unique items
+    unique_items = list(items_by_id.values())
+    
+    # Sort by position in document to maintain order (approximation)
+    # We can't easily sort by document position after grouping, so we'll iterate 
+    # through original list and process if it matches our "best" item
+    
+    processed_ids = set()
+    
+    def process_item_with_children(item, tree, indent_level=0):
+      """Recursively process an item and its children."""
+      list_text = item.get('data-list-text', '')
+      
+      # Skip if already processed
+      if list_text in processed_ids:
+        return ""
+      
+      processed_ids.add(list_text)
+      
+      # Check for children - look in our unique items map
+      children = []
+      for other_id, other_item in items_by_id.items():
+        if other_id != list_text and other_id.startswith(list_text + "."):
+            # Verify it's a direct child or close descendant we want to include
+            # For 5.1, we want 5.1.a), but maybe not 5.1.1 if that's a different branch
+            # The simple startswith check is usually good enough for this structure
+            children.append(other_item)
+            
+      # Sort children by their ID to ensure correct order (e.g. 5.1.a before 5.1.b)
+      # We need a smart sort that handles numbers and letters
+      def sort_key(child):
+          key = child.get('data-list-text', '')
+          # Try to normalize for sorting
+          return key
+      
+      children.sort(key=sort_key)
+      
+      # Build output for this item
+      indent = "  " * indent_level
+      
+      if children:
+        # Parent node: extract text and remove all descendant text
+        # Simple string-based approach: extract parent text, then remove each descendant's text
+        
+        # Extract full text from parent
+        parent_text = extract_text_with_spacing(item).strip()
+        
+        # Get all descendant IDs
+        descendant_ids = []
+        for other_id in items_by_id.keys():
+            if other_id != list_text:
+                if list_text.endswith("."):
+                    is_descendant = other_id.startswith(list_text) and other_id != list_text
+                else:
+                    is_descendant = other_id.startswith(list_text + ".")
+                
+                if is_descendant:
+                    descendant_ids.append(other_id)
+        
+        # Sort by depth (deepest first) to avoid partial replacements
+        descendant_ids.sort(key=lambda x: x.count('.'), reverse=True)
+        
+        # Remove each descendant's text from parent text
+        for desc_id in descendant_ids:
+            if desc_id in items_by_id:
+                desc_text = extract_text_with_spacing(items_by_id[desc_id]).strip()
+                if desc_text and desc_text in parent_text:
+                    parent_text = parent_text.replace(desc_text, "").strip()
+        
+        item_content = parent_text
+        
+        result = f"{indent}{list_text} {item_content}\n"
+        
+        # Process children recursively
+        for child in children:
+            # Only process if it's a direct child in the hierarchy we haven't seen
+            child_id = child.get('data-list-text', '')
+            if child_id not in processed_ids:
+                 result += process_item_with_children(child, tree, indent_level + 1)
+      else:
+        # Leaf node: extract ALL content
+        import copy
+        item_clone = copy.deepcopy(item)
+        item_content = extract_text_with_spacing(item_clone).strip()
+        result = f"{indent}{list_text} {item_content}\n"
+      
+      return result
+    
+    # Process top-level items (those that are not children of other items in our set)
+    # An item is top-level if no other item in items_by_id is its parent
+    sorted_ids = sorted(items_by_id.keys())
+    
+    for list_text in sorted_ids:
+      if list_text in processed_ids:
+        continue
+        
+      # Check if this is a child of another item in our set
+      is_child = False
+      for other_text in items_by_id.keys():
+        if other_text != list_text and list_text.startswith(other_text + "."):
+          is_child = True
+          break
+      
+      if not is_child:
+        chunk = process_item_with_children(items_by_id[list_text], tree)
+        if content_text and chunk:
+          if chunk.split(" ", 1)[1][0:100] in content_text:
+            clean_chunk = re.sub(r"^\s*[0-9]+[0-9\.]* ", "\n", chunk.strip(), flags=re.MULTILINE)
+            clean_chunk = re.sub(r"^\s*[a-z]+\) ", "", clean_chunk, flags=re.MULTILINE).strip()
+            content_text = content_text.replace(clean_chunk, "")
+            content_text += "\n\n" + "-" * 40 + "\n\n"
+        content_text += chunk
     
     if content_text:
+      # Clean up the text - remove excessive whitespace
+      content_text = re.sub(r'\n\s*\n', '\n\n', content_text)
+      content_text = re.sub(r' +', ' ', content_text)
       return content_text
-  
-  # Final fallback: raw text extraction
-  body = tree.xpath('//body')
-  if not body:
-    return ""
-  
-  # Remove navigation, header, footer elements
-  for elem in tree.xpath("//nav | //header | //footer | //div[contains(@class, 'menu')] | //div[@id='menu']"):
-    parent = elem.getparent()
-    if parent is not None:
-      parent.remove(elem)
   
   content_text = body[0].text_content().strip()
   
@@ -193,8 +307,11 @@ def get_leg_just_ro_content(url, reference):
       if cached_file_id:
         print(f"Found in cache: {cache_filename}")
         cached_content = cloud_file_management.download_file_content(cached_file_id)
-        lines = cached_content.splitlines()
-        linked_content = '\n'.join(lines[1:]) if len(lines) > 1 else cached_content
+        if cached_content:
+          lines = cached_content.splitlines()
+          linked_content = '\n'.join(lines[1:]) if len(lines) > 1 else cached_content
+        else:
+          linked_content = None
       else:
         try:
           linked_content = get_afis_page_content(linked_url)
@@ -236,8 +353,11 @@ def get_leg_just_ro_content(url, reference):
       if cached_file_id:
         print(f"Found in cache: {cache_filename}")
         cached_content = cloud_file_management.download_file_content(cached_file_id)
-        lines = cached_content.splitlines()
-        annex_content = '\n'.join(lines[1:]) if len(lines) > 1 else cached_content
+        if cached_content:
+          lines = cached_content.splitlines()
+          annex_content = '\n'.join(lines[1:]) if len(lines) > 1 else cached_content
+        else:
+          annex_content = None
       else:
         try:
           annex_content = get_afis_page_content(annex_url)
@@ -253,6 +373,9 @@ def get_leg_just_ro_content(url, reference):
           annex_content = None
       
       if annex_content and len(annex_content) > 100:
+        # Tag annex articles
+        annex_content = re.sub(r'(Articolul|ART\.)', r'\1 (din Anexa)', annex_content)
+        
         law += f"\n\n{'='*60}\n"
         law += f"ANNEX DOCUMENT:\n"
         law += f"Source: {annex_url}\n"
