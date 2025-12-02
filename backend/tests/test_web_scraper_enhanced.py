@@ -5,11 +5,7 @@ from lxml import html as lxml_html
 from collections import Counter
 
 # Import the functions we're testing
-import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-
-from web_scraping.web_scraper import (
+from src.web_scraping.web_scraper import (
     get_afis_page_content,
     analyze_document_links,
     get_leg_just_ro_content
@@ -24,11 +20,12 @@ class TestEnhancedWebScraper(unittest.TestCase):
         # Create mock HTML with repeated links
         html_content = """
         <html>
+        <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
             <body>
                 <span class="S_ART_BDY">Short article text</span>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Link 1</a>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Link 2 (same)</a>
-                <a href="~/../../Public/DetaliiDocumentAfis/47355">Different link</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Link 1</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Link 2 (same)</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/47355">Different link</a>
             </body>
         </html>
         """
@@ -48,10 +45,11 @@ class TestEnhancedWebScraper(unittest.TestCase):
         """Test when no links are repeated."""
         html_content = """
         <html>
+        <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
             <body>
                 <span class="S_ART_BDY">Article text</span>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Link 1</a>
-                <a href="~/../../Public/DetaliiDocumentAfis/47355">Link 2</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Link 1</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/47355">Link 2</a>
             </body>
         </html>
         """
@@ -83,7 +81,7 @@ class TestEnhancedWebScraper(unittest.TestCase):
         self.assertEqual(result['article_text_length'], len("This is article text with some content.More article content here."))
         self.assertEqual(result['annex_text_length'], len("Annex text."))
 
-    @patch('web_scraping.web_scraper.requests.get')
+    @patch('src.web_scraping.web_scraper.requests.get')
     def test_get_afis_page_content_basic(self, mock_get):
         """Test basic content extraction from DetaliiDocumentAfis page."""
         # Mock response with typical structure
@@ -112,7 +110,7 @@ class TestEnhancedWebScraper(unittest.TestCase):
         self.assertNotIn('Navigation menu', result)
         self.assertNotIn('Footer content', result)
 
-    @patch('web_scraping.web_scraper.requests.get')
+    @patch('src.web_scraping.web_scraper.requests.get')
     def test_get_afis_page_content_whitespace_cleanup(self, mock_get):
         """Test that excessive whitespace is cleaned up."""
         html_content = """
@@ -136,20 +134,21 @@ class TestEnhancedWebScraper(unittest.TestCase):
         self.assertNotIn('   ', result)  # No triple spaces
         self.assertNotIn('\n\n\n', result)  # No triple newlines
 
-    @patch('web_scraping.web_scraper.cloud_file_management')
-    @patch('web_scraping.web_scraper.requests.get')
+    @patch('src.web_scraping.web_scraper.cloud_file_management')
+    @patch('src.web_scraping.web_scraper.requests.get')
     def test_get_leg_just_ro_content_short_doc_with_repeated_links(self, mock_get, mock_cloud):
         """Test HG 1188/2022 scenario: short doc with repeated links."""
         # Mock main document response (short content)
         main_html = """
         <html>
+        <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
             <body>
                 <span id="id_artA6_ttl">ARTICOL UNIC</span>
                 <span class="S_ART_BDY">Se aprobă Planul național.</span>
                 <span class="S_ANX_BDY">Anexă scurtă.</span>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Plan național</a>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Plan național (ref 2)</a>
-                <a href="~/../../Public/DetaliiDocumentAfis/47355">Constituția</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Plan național</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Plan național (ref 2)</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/47355">Constituția</a>
             </body>
         </html>
         """
@@ -178,6 +177,7 @@ class TestEnhancedWebScraper(unittest.TestCase):
         
         mock_get.side_effect = get_side_effect
         mock_cloud.save_file_in_cloud.return_value = 'test_file_id'
+        mock_cloud.search_file_in_cloud.return_value = None
         
         # Execute
         result = get_leg_just_ro_content('https://legislatie.just.ro/Public/DetaliiDocument/259888', 'HG 1188 2022')
@@ -195,19 +195,20 @@ class TestEnhancedWebScraper(unittest.TestCase):
         self.assertIn('appears 2 times', saved_content)
         self.assertIn('260205', saved_content)
 
-    @patch('web_scraping.web_scraper.cloud_file_management')
-    @patch('web_scraping.web_scraper.requests.get')
+    @patch('src.web_scraping.web_scraper.cloud_file_management')
+    @patch('src.web_scraping.web_scraper.requests.get')
     def test_get_leg_just_ro_content_long_doc_no_linked_fetch(self, mock_get, mock_cloud):
         """Test that long documents don't trigger linked document fetching."""
         # Mock main document response (long content - over 500 chars)
         long_content = "A" * 600  # 600 characters
         main_html = f"""
         <html>
+        <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
             <body>
                 <span id="id_artA6_ttl">ARTICOL 1</span>
                 <span class="S_ART_BDY">{long_content}</span>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Link</a>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Link (repeated)</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Link</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Link (repeated)</a>
             </body>
         </html>
         """
@@ -230,18 +231,19 @@ class TestEnhancedWebScraper(unittest.TestCase):
         
         self.assertNotIn('LINKED DOCUMENT', saved_content)
 
-    @patch('web_scraping.web_scraper.cloud_file_management')
-    @patch('web_scraping.web_scraper.requests.get')
+    @patch('src.web_scraping.web_scraper.cloud_file_management')
+    @patch('src.web_scraping.web_scraper.requests.get')
     def test_get_leg_just_ro_content_short_doc_no_repeated_links(self, mock_get, mock_cloud):
         """Test that short docs without repeated links don't fetch linked docs."""
         # Mock main document response (short but no repeated links)
         main_html = """
         <html>
+        <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
             <body>
                 <span id="id_artA6_ttl">ARTICOL 1</span>
                 <span class="S_ART_BDY">Short text.</span>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Link 1</a>
-                <a href="~/../../Public/DetaliiDocumentAfis/47355">Link 2 (different)</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Link 1</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/47355">Link 2 (different)</a>
             </body>
         </html>
         """
@@ -257,18 +259,19 @@ class TestEnhancedWebScraper(unittest.TestCase):
         # Verify only one request was made (no linked docs fetched)
         self.assertEqual(mock_get.call_count, 1)
 
-    @patch('web_scraping.web_scraper.cloud_file_management')
-    @patch('web_scraping.web_scraper.requests.get')
+    @patch('src.web_scraping.web_scraper.cloud_file_management')
+    @patch('src.web_scraping.web_scraper.requests.get')
     def test_get_leg_just_ro_content_linked_doc_fetch_error_handling(self, mock_get, mock_cloud):
         """Test that errors fetching linked documents are handled gracefully."""
         # Mock main document response (short with repeated links)
         main_html = """
         <html>
+        <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
             <body>
                 <span id="id_artA6_ttl">ARTICOL 1</span>
                 <span class="S_ART_BDY">Short.</span>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Link</a>
-                <a href="~/../../Public/DetaliiDocumentAfis/260205">Link (repeated)</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Link</a>
+                <a href="~/../../../Public/DetaliiDocumentAfis/260205">Link (repeated)</a>
             </body>
         </html>
         """

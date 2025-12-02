@@ -3,11 +3,7 @@ from unittest.mock import patch, MagicMock
 import sys
 import os
 
-# Ensure project root is in path to allow imports from backend.src
-# Assuming this file is in backend/tests/
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-
-from backend.src.web_scraping import web_scraper
+from src.web_scraping import web_scraper
 
 class TestAnnexLogic(unittest.TestCase):
 

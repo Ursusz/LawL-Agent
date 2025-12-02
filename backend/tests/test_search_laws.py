@@ -3,14 +3,14 @@ from unittest.mock import MagicMock, patch
 import sys
 import os
 
-from backend.src.search_laws import find_laws, fetch_online_reference
+from src.search_laws import find_laws, fetch_online_reference
 
 class TestSearchLaws(unittest.TestCase):
 
-    @patch('backend.src.search_laws.brave_search_api')
-    @patch('backend.src.search_laws.cloud_file_management')
-    @patch('backend.src.search_laws.bm25')
-    @patch('backend.src.search_laws.gemini_summary')
+    @patch('src.search_laws.brave_search_api')
+    @patch('src.search_laws.cloud_file_management')
+    @patch('src.search_laws.bm25')
+    @patch('src.search_laws.gemini_summary')
     def test_multiple_references_mixed_sources(self, mock_gemini, mock_bm25, mock_cloud, mock_brave):
         """Test processing multiple law references from both cache and online sources"""
         law_refs = ["LEGE_53_2003", "HG_856_2020", "OUG_195_2002"]
@@ -69,10 +69,10 @@ class TestSearchLaws(unittest.TestCase):
         # Verify brave search only called once (for HG_856_2020)
         self.assertEqual(mock_brave.search_law_online.call_count, 1)
 
-    @patch('backend.src.search_laws.brave_search_api')
-    @patch('backend.src.search_laws.cloud_file_management')
-    @patch('backend.src.search_laws.bm25')
-    @patch('backend.src.search_laws.gemini_summary')
+    @patch('src.search_laws.brave_search_api')
+    @patch('src.search_laws.cloud_file_management')
+    @patch('src.search_laws.bm25')
+    @patch('src.search_laws.gemini_summary')
     def test_cache_hit(self, mock_gemini, mock_bm25, mock_cloud, mock_brave):
         """Test law found in cache (no online search needed)"""
         law_ref = "LEGE_287_2009"
@@ -94,10 +94,10 @@ class TestSearchLaws(unittest.TestCase):
         # Verify online search NOT called
         mock_brave.search_law_online.assert_not_called()
 
-    @patch('backend.src.search_laws.brave_search_api')
-    @patch('backend.src.search_laws.cloud_file_management')
-    @patch('backend.src.search_laws.bm25')
-    @patch('backend.src.search_laws.gemini_summary')
+    @patch('src.search_laws.brave_search_api')
+    @patch('src.search_laws.cloud_file_management')
+    @patch('src.search_laws.bm25')
+    @patch('src.search_laws.gemini_summary')
     def test_cache_miss_online_found(self, mock_gemini, mock_bm25, mock_cloud, mock_brave):
         """Test law not in cache but found online"""
         law_ref = "LEGE_360_2023"
@@ -122,10 +122,10 @@ class TestSearchLaws(unittest.TestCase):
         # Verify online search WAS called
         mock_brave.search_law_online.assert_called_once()
 
-    @patch('backend.src.search_laws.brave_search_api')
-    @patch('backend.src.search_laws.cloud_file_management')
-    @patch('backend.src.search_laws.bm25')
-    @patch('backend.src.search_laws.gemini_summary')
+    @patch('src.search_laws.brave_search_api')
+    @patch('src.search_laws.cloud_file_management')
+    @patch('src.search_laws.bm25')
+    @patch('src.search_laws.gemini_summary')
     def test_not_found_anywhere(self, mock_gemini, mock_bm25, mock_cloud, mock_brave):
         """Test law not found in cache or online"""
         law_ref = "LEGE_0_0000"
@@ -139,10 +139,10 @@ class TestSearchLaws(unittest.TestCase):
         # Should not be in results (no law_text means skipped)
         self.assertNotIn(law_ref, results)
 
-    @patch('backend.src.search_laws.brave_search_api')
-    @patch('backend.src.search_laws.cloud_file_management')
-    @patch('backend.src.search_laws.bm25')
-    @patch('backend.src.search_laws.gemini_summary')
+    @patch('src.search_laws.brave_search_api')
+    @patch('src.search_laws.cloud_file_management')
+    @patch('src.search_laws.bm25')
+    @patch('src.search_laws.gemini_summary')
     def test_gemini_failure(self, mock_gemini, mock_bm25, mock_cloud, mock_brave):
         """Test handling of Gemini API failure"""
         law_ref = "OUG_117_2022"

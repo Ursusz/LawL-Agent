@@ -2,10 +2,7 @@ import unittest
 import sys
 import os
 
-# Ensure project root is in path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-
-from backend.src.web_scraping import web_scraper
+from src.web_scraping import web_scraper
 from unittest.mock import patch, MagicMock
 
 class TestDuplication(unittest.TestCase):
