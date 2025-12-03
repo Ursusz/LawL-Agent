@@ -26,9 +26,11 @@ def normalize_text(text: str) -> str:
 def extract_law_prefix(text: str) -> str:
     act_pattern = re.compile(
         r'\b('
+        r'hotarare\s+de\s+guvern|hotarare\s+guvern|'  # Match longer forms first
+        r'ordonanta\s+de\s+urgenta|'  # Match longer forms first
         r'lege|'
-        r'hotarare\s+de\s+guvern|hotarare\s+guvern|hotarare|hg|'
-        r'ordonanta\s+de\s+urgenta|ordonanta|'
+        r'hotarare|hg|'
+        r'ordonanta|'
         r'oug?|'
         r'ordin|'
         r'decizie'
@@ -39,6 +41,11 @@ def extract_law_prefix(text: str) -> str:
     match = act_pattern.search(text)
     if match:
        prefix = match.group(1).upper()
+       # Normalize longer forms to abbreviations
+       if 'HOTARARE' in prefix and 'GUVERN' in prefix:
+           return 'HG'
+       elif 'ORDONANTA' in prefix and 'URGENTA' in prefix:
+           return 'OUG'
        return prefix.replace(' ', '_')
     return None
    
