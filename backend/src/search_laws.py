@@ -73,9 +73,14 @@ def find_laws(references, document_text):
 
     if law_text:
       print("Extracting most relevant article")
-      relevant_article = bm25.get_most_relevant_fragment(law_text=law_text, context=document_text)
+      print("Extracting most relevant article")
+      relevant_articles_with_scores = bm25.get_most_relevant_fragment(law_text=law_text, context=document_text)
+      
+      # Use the top 1 article for Gemini summary
+      top_article = relevant_articles_with_scores[0][0] if relevant_articles_with_scores else ""
+      
       print("Waiting for gemini information")
-      gemini_information = gemini_summary.get_gemini_informations_about_law(law_text, relevant_article)
+      gemini_information = gemini_summary.get_gemini_informations_about_law(law_text, top_article)
       if gemini_information:
         print(f"Current gemini info size -> {len(gemini_information)}")
       else:
@@ -99,7 +104,8 @@ def find_laws(references, document_text):
             "law": law_text,
             "law_summary": gemini_information[0],
             "law_simplified": gemini_information[1],
-            "relevant_article": relevant_article,
+            "relevant_article": top_article,
+            "relevant_articles": [{"text": text, "score": score} for text, score in relevant_articles_with_scores],
             "articles_summary": gemini_information[2],
           }
       else:

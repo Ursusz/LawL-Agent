@@ -374,7 +374,7 @@ function Results() {
                                         </div>
                                       )}
 
-                                      {/* Most Relevant Article */}
+                                      {/* Relevant Articles (Top 5) */}
                                       <div className="flex items-center gap-2">
                                         <button
                                           className="flex-1 text-left font-semibold px-3 py-2 rounded transition-colors"
@@ -389,15 +389,15 @@ function Results() {
                                             [lawRef]: !openArticle[lawRef]
                                           })}
                                         >
-                                          📜 Articol Relevant
-                                          {law_details.relevant_article && law_details.relevant_article.includes('(din Anexa)') && (
-                                            <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                              Anexă
-                                            </span>
-                                          )}
+                                          📜 Articole Relevante (Top 5)
                                         </button>
                                         <button
-                                          onClick={() => handleCopy(law_details.relevant_article, `article-${lawRef}`)}
+                                          onClick={() => {
+                                            const allArticles = law_details.relevant_articles
+                                              ?.map((art, idx) => `${idx + 1}. [Score: ${art.score.toFixed(2)}]\n${art.text}`)
+                                              .join('\n\n---\n\n') || law_details.relevant_article || '';
+                                            handleCopy(allArticles, `article-${lawRef}`);
+                                          }}
                                           className="px-2 py-2 rounded transition-colors"
                                           style={{
                                             backgroundColor: 'hsla(30, 5%, 43%, 0.15)',
@@ -408,10 +408,48 @@ function Results() {
                                         </button>
                                       </div>
                                       {openArticle[lawRef] && (
-                                        <div className="ml-4 mt-2 p-4 rounded text-justify max-h-96 overflow-y-auto" style={{ backgroundColor: 'hsla(30, 5%, 43%, 0.1)' }}>
-                                          <p style={{ color: 'hsla(30, 5%, 43%, 1)' }}>
-                                            {law_details.relevant_article}
-                                          </p>
+                                        <div className="ml-4 mt-2 space-y-3 max-h-96 overflow-y-auto">
+                                          {law_details.relevant_articles && law_details.relevant_articles.length > 0 ? (
+                                            law_details.relevant_articles.map((article, idx) => (
+                                              <div
+                                                key={idx}
+                                                className="p-4 rounded text-justify"
+                                                style={{
+                                                  backgroundColor: idx === 0 ? 'hsla(30, 5%, 43%, 0.15)' : 'hsla(30, 5%, 43%, 0.1)',
+                                                  border: idx === 0 ? '2px solid hsla(33, 49%, 25%, 0.3)' : 'none'
+                                                }}
+                                              >
+                                                <div className="flex items-center justify-between mb-2">
+                                                  <span className="font-semibold text-sm" style={{ color: 'hsla(33, 49%, 25%, 1)' }}>
+                                                    #{idx + 1} {idx === 0 && '(Folosit pentru sumar)'}
+                                                  </span>
+                                                  <span
+                                                    className="px-2 py-1 rounded text-xs font-mono"
+                                                    style={{
+                                                      backgroundColor: 'hsla(138, 29%, 25%, 0.2)',
+                                                      color: 'hsla(33, 49%, 25%, 1)'
+                                                    }}
+                                                  >
+                                                    Score: {article.score.toFixed(2)}
+                                                  </span>
+                                                </div>
+                                                <p style={{ color: 'hsla(30, 5%, 43%, 1)' }}>
+                                                  {article.text}
+                                                  {article.text.includes('(din Anexa)') && (
+                                                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                      Anexă
+                                                    </span>
+                                                  )}
+                                                </p>
+                                              </div>
+                                            ))
+                                          ) : (
+                                            <div className="p-4 rounded text-justify" style={{ backgroundColor: 'hsla(30, 5%, 43%, 0.1)' }}>
+                                              <p style={{ color: 'hsla(30, 5%, 43%, 1)' }}>
+                                                {law_details.relevant_article || 'No relevant articles found.'}
+                                              </p>
+                                            </div>
+                                          )}
                                         </div>
                                       )}
 

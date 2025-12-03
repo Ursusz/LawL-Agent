@@ -49,7 +49,7 @@ class TestSearchLaws(unittest.TestCase):
         mock_cloud.download_file_content.side_effect = download_side_effect
         
         # Mock BM25 and Gemini
-        mock_bm25.get_most_relevant_fragment.return_value = "Art. 5..."
+        mock_bm25.get_most_relevant_fragment.return_value = [("Art. 5...", 0.9)]
         mock_gemini.get_gemini_informations_about_law.return_value = ["Summary", "Simplified", "Article Summary"]
         
         # Run
@@ -82,7 +82,7 @@ class TestSearchLaws(unittest.TestCase):
         mock_cloud.search_file_in_cloud.return_value = {'id': 'cached_id'}
         mock_cloud.download_file_content.return_value = "https://legislatie.just.ro/Public/DetaliiDocument/109891\nLEGE nr. 287 din 17 iulie 2009\nArt. 1..."
         
-        mock_bm25.get_most_relevant_fragment.return_value = "Art. 1..."
+        mock_bm25.get_most_relevant_fragment.return_value = [("Art. 1...", 0.8)]
         mock_gemini.get_gemini_informations_about_law.return_value = ["Summary", "Simple", "Art Sum"]
         
         results = find_laws([law_ref], document_text)
@@ -110,7 +110,7 @@ class TestSearchLaws(unittest.TestCase):
         mock_brave.search_law_online.return_value = 'new_online_id'
         mock_cloud.download_file_content.return_value = "https://legislatie.just.ro/Public/DetaliiDocument/272583\nLEGE nr. 360 din 28 decembrie 2023\nArt. 1..."
         
-        mock_bm25.get_most_relevant_fragment.return_value = "Art. 1..."
+        mock_bm25.get_most_relevant_fragment.return_value = [("Art. 1...", 0.7)]
         mock_gemini.get_gemini_informations_about_law.return_value = ["Summary", "Simple", "Art Sum"]
         
         results = find_laws([law_ref], document_text)
@@ -150,7 +150,7 @@ class TestSearchLaws(unittest.TestCase):
         
         mock_cloud.search_file_in_cloud.return_value = {'id': 'id'}
         mock_cloud.download_file_content.return_value = "url\nORDONANȚĂ DE URGENȚĂ nr. 117 din 14 septembrie 2022\nArt. 1..."
-        mock_bm25.get_most_relevant_fragment.return_value = "Art. 1"
+        mock_bm25.get_most_relevant_fragment.return_value = [("Art. 1", 0.6)]
         
         # Mock Gemini failure
         mock_gemini.get_gemini_informations_about_law.return_value = None

@@ -37,6 +37,6 @@ def get_most_relevant_fragment(law_text, context):
 
     scores = bm25.get_scores(query_tokens)
 
-    most_relevant_fragment_index = sorted(range(len(scores)), key=lambda x: scores[x], reverse=True)[:1]
+    most_relevant_indices = sorted(range(len(scores)), key=lambda x: scores[x], reverse=True)[:5]
 
-    return text_fragments[most_relevant_fragment_index[0]]
+    return [(text_fragments[i], scores[i]) for i in most_relevant_indices]
