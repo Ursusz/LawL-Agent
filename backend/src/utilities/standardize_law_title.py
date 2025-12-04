@@ -75,6 +75,8 @@ def standardize_law_title(law_title: str) -> str:
     numbers_pattern = r'\b\d+(?:/\d+)?\b'
 
     numbers_match = re.search(numbers_pattern, text)
+    if not numbers_match:
+        return None
     numbers = numbers_match.group(0).split('/')
 
     # standardized_name = ''
@@ -86,6 +88,33 @@ def standardize_law_title(law_title: str) -> str:
         #    standardized_name = f"{prefix}_{numbers[0]}_{year}"
             return prefix, numbers[0], year
     return None
+
+
+def standardize_law_title_from_page(law_title: str) -> str:
+    """Standardize law title extracted from legislatie.just.ro pages.
+    
+    This function is specifically designed for titles like:
+    "CODUL FISCAL din 8 septembrie 2015 (Legea nr. 227/2015)"
+    
+    It extracts the law reference from the parenthetical part to avoid
+    confusion with date numbers.
+    """
+    if not isinstance(law_title, str):
+        return None
+    
+    # Try to extract from parenthetical reference first (most reliable for web pages)
+    # Pattern: (Legea nr. 207/2015) or (Legea 227/2015)
+    paren_pattern = r'\(([^)]+)\)'
+    paren_matches = re.findall(paren_pattern, law_title)
+    
+    for paren_content in paren_matches:
+        # Extract just the parenthetical part and standardize it
+        result = standardize_law_title(paren_content)
+        if result:
+            return result
+    
+    # Fallback to regular standardization
+    return standardize_law_title(law_title)
 
 
 # law_titles = [

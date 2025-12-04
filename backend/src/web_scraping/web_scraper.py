@@ -4,6 +4,45 @@ import re, os
 from collections import Counter
 from ..utilities import parse_law_title, standardize_law_title, cloud_file_management
 
+def extract_law_title_from_page(tree):
+  """Extract the formal law title from a legislatie.just.ro page.
+  
+  Returns the full law title (e.g., 'CODUL FISCAL din 8 septembrie 2015 (Legea nr. 227/2015)')
+  or None if not found.
+  """
+  try:
+    # Priority 1: Look for S_DEN (denomination) and S_PAR (parenthetical law reference)
+    # S_DEN contains the title like "CODUL DE PROCEDURĂ FISCALĂ din 20 iulie 2015 (*actualizat*)"
+    # S_PAR contains the formal reference like "(Legea nr. 207 din 20 iulie 2015)"
+    den_elements = tree.xpath("//span[@class='S_DEN']")
+    par_elements = tree.xpath("//span[@class='S_PAR']")
+    
+    if den_elements and par_elements:
+      den_text = den_elements[0].text_content().strip()
+      par_text = par_elements[0].text_content().strip()
+      full_title = f"{den_text} {par_text}"
+      return full_title
+    
+    # Priority 2: S_DEN alone (might still contain law reference in some cases)
+    if den_elements:
+      den_text = den_elements[0].text_content().strip()
+      if len(den_text) > 10:
+        return den_text
+
+    # Priority 3: Try title tag as fallback
+    title_elements = tree.xpath("//title")
+    if title_elements:
+      title_text = title_elements[0].text_content().strip()
+      # Remove the " - Portal Legislativ" suffix
+      title_text = re.sub(r'\s*-\s*Portal Legislativ\s*$', '', title_text)
+      if len(title_text) > 10:
+        return title_text
+    
+    return None
+  except Exception as e:
+    print(f"Error extracting law title: {e}")
+    return None
+
 # Threshold for determining if a document is "short" and should fetch linked docs
 SHORT_DOCUMENT_THRESHOLD = 2000
 
@@ -273,6 +312,29 @@ def get_leg_just_ro_content(url, reference):
   response = requests.get(url)
   tree = html.fromstring(response.content)
 
+  # Extract the formal law title from the page
+  law_title = extract_law_title_from_page(tree)
+  normalized_ref = None
+  
+  if law_title:
+    print(f"Extracted law title: {law_title}")
+    # Try to normalize the extracted title using the specialized function for web pages
+    std_result = standardize_law_title.standardize_law_title_from_page(law_title)
+    if std_result:
+      # Reconstruct the normalized reference
+      if len(std_result) == 3:
+        tip_act, nr_act, an_act = std_result
+        normalized_ref = f'{tip_act}_{nr_act}_{an_act}'
+      elif len(std_result) == 4:
+        tip_act, nr_act1, nr_act2, an_act = std_result
+        normalized_ref = f'{tip_act}_{nr_act1}_{nr_act2}_{an_act}'
+      
+      if normalized_ref:
+        print(f"Normalized to: {normalized_ref}")
+  
+  # Use normalized reference for file name if available, otherwise use original
+  file_reference = normalized_ref if normalized_ref else reference
+
   # Articol 1, Articol 2, Articol 3, ... // ART. 1, ART. 2, ...
   xpath_article_titles = "//*[starts-with(@id, 'id_art') and substring(@id, string-length(@id) - 2, 3) = 'ttl' and not(ancestor::*[contains(@class, 'S_ANX_BDY')])]"
   article_titles = tree.xpath(xpath_article_titles)
@@ -389,10 +451,14 @@ def get_leg_just_ro_content(url, reference):
   if not os.path.exists(folder):
       os.makedirs(folder)
 
-  file_name = f"{reference}.txt"
+  file_name = f"{file_reference}.txt"
     
   file_saving_location = os.path.join(folder, file_name)
   with open(file_saving_location, "w") as file:
     file.write(url + "\n")
     file.write(law)
-  return cloud_file_management.save_file_in_cloud(file_saving_location)
+  
+  file_id = cloud_file_management.save_file_in_cloud(file_saving_location)
+  
+  # Return both file_id and normalized_ref (or None if not normalized)
+  return file_id, normalized_ref
