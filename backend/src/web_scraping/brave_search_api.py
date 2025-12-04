@@ -32,7 +32,9 @@ def search_law_online(reference):
       if trusted_domain in url:
         urls.append(url)
 
-  if 'legislatie.just.ro' in urls[0]:
+  if urls and 'legislatie.just.ro' in urls[0]:
     print(urls[0])
-    return web_scraper.get_leg_just_ro_content(urls[0], reference)
-  return None
+    # get_leg_just_ro_content now returns (file_id, normalized_ref)
+    file_id, normalized_ref = web_scraper.get_leg_just_ro_content(urls[0], reference)
+    return file_id, normalized_ref
+  return None, None

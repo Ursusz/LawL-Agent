@@ -83,7 +83,7 @@ BRAVE_SEARCH_API_KEY=your_api_key
     ```
 3. Ruleaza testele:
     ```bash
-    uv run python -m unittest discover tests
+    uv run python -m pytest tests
     ```
 
 #### Frontend
