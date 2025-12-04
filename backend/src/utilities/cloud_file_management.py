@@ -72,6 +72,65 @@ def save_file_in_cloud(file_pth):
         else:
             print(f"File '{file_pth}' does not exist in local storage.")
 
+def update_file_in_cloud(file_pth):
+    """Update an existing file in Google Drive or create it if it doesn't exist.
+    
+    This function searches for a file with the same name and updates it instead of
+    creating duplicates. If the file doesn't exist, it creates a new one.
+    
+    Args:
+        file_pth: Path to the local file to upload
+        
+    Returns:
+        file_id: The ID of the updated or created file
+    """
+    print(f"Updating file {file_pth} in gdrive...")
+    service = get_drive_service()
+    if not service: return None
+    
+    try:
+        fname = os.path.basename(file_pth)
+        
+        # Search for existing file
+        existing_file = search_file_in_cloud(fname)
+        
+        media = MediaFileUpload(file_pth, mimetype='application/octet-stream')
+        
+        if existing_file:
+            # Update existing file
+            file_id = existing_file['id']
+            print(f"Updating existing file with ID: {file_id}")
+            file = service.files().update(
+                fileId=file_id,
+                media_body=media,
+                supportsAllDrives=True
+            ).execute()
+            print(f"File with ID: {file_id} was successfully updated.")
+            return file_id
+        else:
+            # Create new file if it doesn't exist
+            print(f"File not found, creating new file...")
+            file_metadata = {'name': fname, 'parents': [FOLDER_ID]}
+            file = service.files().create(
+                body=file_metadata,
+                media_body=media,
+                fields='id',
+                supportsAllDrives=True
+            ).execute()
+            file_id = file.get('id')
+            print(f"File with ID: {file_id} was successfully created.")
+            return file_id
+            
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return None
+    finally:
+        if os.path.exists(file_pth):
+            os.remove(file_pth)
+            print(f"File '{file_pth}' has been removed from TMP folder.")
+        else:
+            print(f"File '{file_pth}' does not exist in local storage.")
+
 def search_file_in_cloud(file_name):
     print("Searching for law reference in gdrive...")
     service = get_drive_service()

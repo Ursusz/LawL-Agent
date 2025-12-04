@@ -67,8 +67,8 @@ def save_law_mappings(mappings):
         with open(temp_path, 'w') as f:
             json.dump(mappings, f, indent=2, ensure_ascii=False)
         
-        # Upload to cloud (will overwrite if exists)
-        file_id = cloud_file_management.save_file_in_cloud(temp_path)
+        # Update existing file or create new one (prevents duplicates)
+        file_id = cloud_file_management.update_file_in_cloud(temp_path)
         print(f"Saved {len(mappings)} law mappings to cloud")
         
         # Update cache
