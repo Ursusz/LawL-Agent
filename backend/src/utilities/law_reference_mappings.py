@@ -90,11 +90,14 @@ def add_law_mapping(sanitized_ref, normalized_ref):
     if not sanitized_ref or not normalized_ref or sanitized_ref == normalized_ref:
         return
     
+    # Lowercase for case-insensitive lookups
+    sanitized_ref_lower = sanitized_ref.lower()
+    
     mappings = load_law_mappings()
     
     # Only update if mapping doesn't exist or is different
-    if sanitized_ref not in mappings or mappings[sanitized_ref] != normalized_ref:
-        mappings[sanitized_ref] = normalized_ref
+    if sanitized_ref_lower not in mappings or mappings[sanitized_ref_lower] != normalized_ref:
+        mappings[sanitized_ref_lower] = normalized_ref
         print(f"Adding mapping: {sanitized_ref} -> {normalized_ref}")
         save_law_mappings(mappings)
 
@@ -108,8 +111,11 @@ def get_normalized_reference(sanitized_ref):
     Returns:
         The normalized reference if found, None otherwise
     """
+    # Lowercase for case-insensitive lookups
+    sanitized_ref_lower = sanitized_ref.lower()
+    
     mappings = load_law_mappings()
-    normalized = mappings.get(sanitized_ref)
+    normalized = mappings.get(sanitized_ref_lower)
     if normalized:
         print(f"Found mapping: {sanitized_ref} -> {normalized}")
     return normalized
