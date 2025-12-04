@@ -383,7 +383,7 @@ def get_leg_just_ro_content(url, reference):
             with open(cache_path, "w") as f:
               f.write(linked_url + "\n")
               f.write(linked_content)
-            cloud_file_management.save_file_in_cloud(cache_path)
+            cloud_file_management.update_file_in_cloud(cache_path)
             print(f"Cached linked document as {cache_filename}")
         except Exception as e:
           print(f"Error fetching linked document {linked_url}: {e}")
@@ -428,7 +428,7 @@ def get_leg_just_ro_content(url, reference):
             with open(cache_path, "w") as f:
               f.write(annex_url + "\n")
               f.write(annex_content)
-            cloud_file_management.save_file_in_cloud(cache_path)
+            cloud_file_management.update_file_in_cloud(cache_path)
             print(f"Cached annex document as {cache_filename}")
         except Exception as e:
           print(f"Error fetching annex document {annex_url}: {e}")
@@ -458,7 +458,7 @@ def get_leg_just_ro_content(url, reference):
     file.write(url + "\n")
     file.write(law)
   
-  file_id = cloud_file_management.save_file_in_cloud(file_saving_location)
+  file_id = cloud_file_management.update_file_in_cloud(file_saving_location)
   
   # Return both file_id and normalized_ref (or None if not normalized)
   return file_id, normalized_ref
