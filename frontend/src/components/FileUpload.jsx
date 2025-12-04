@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Cloud, X, Check, FileText, Edit2, Shield, AlertTriangle, RotateCcw, Trash2, Redo } from 'lucide-react';
 import { extractContent, redactPII, adjustRedactionPositions, processManualEdit } from '../utils/fileProcessor';
 
-export default function FileUpload({ setLoading }) {
+export default function FileUpload({ setLoading, setSessionId }) {
   const [dragActive, setDragActive] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -91,6 +91,10 @@ export default function FileUpload({ setLoading }) {
     try {
       setLoading(true);
 
+      // Generate session ID for progress tracking
+      const sessionId = crypto.randomUUID();
+      setSessionId(sessionId);
+
       const timestamp = new Date().getTime();
       const newFileName = `upload_${timestamp}.txt`;
       const newFile = new File([extractedText], newFileName, { type: 'text/plain' });
@@ -100,6 +104,9 @@ export default function FileUpload({ setLoading }) {
 
       const response = await fetch('http://localhost:8000/search', {
         method: 'POST',
+        headers: {
+          'X-Session-ID': sessionId
+        },
         body: formData,
       });
 

@@ -52,7 +52,7 @@ Respond only with a JSON code block in the following format. DO NOT INCLUDE ANYT
 TARGETED_ARTICLE_SUMMARY_PROMPT = """
 ** TASKS:
 
-1. Write a summary for the given articles extracted from a law, explaining their relevance and key points.
+1. Write a summary in plain and easy to understand language for the given articles extracted from a law, explaining their relevance and key points with respect to the given document.
 
 ---
 
@@ -76,12 +76,12 @@ Respond only with a JSON code block in the following format. DO NOT INCLUDE ANYT
 
 ** INPUTS
 
-1. Law text (for context):
-```law_text
+1. Document text (for context):
+```doc_text
 {law_text}
 ```
 
-2. Article text:
+2. Relevant articles:
 ```article_text
 {relevant_article}
 ```
@@ -150,7 +150,7 @@ def get_full_law_summary(law_text):
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model="gemini-2.0-flash-lite",
+                model="gemini-2.5-flash-lite",
                 contents=task,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(thinking_budget=0),
@@ -223,7 +223,7 @@ def get_targeted_article_summary(law_text, relevant_article):
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model="gemini-2.0-flash-lite",
+                model="gemini-2.0-flash",
                 contents=task,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(thinking_budget=0),

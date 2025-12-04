@@ -11,19 +11,22 @@ load_dotenv()
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 TASK_PROMPT = """
+** PERSONA:
+As a lawyer, you are helping a client understand the laws that are relevant to their case. Explain in simple language what the beaurocratic burdens are regarding their document.
+
 ** TASK:
-Identify ALL implicit or explicit references to Romanian laws, codes, or regulations in the provided text.
-For each reference found, provide its formal legal name in a succint manner.
-If a reference is already formal, include it as is.
+Identify ALL implicit or *implied* references (NOT EXPLICIT) to Romanian laws, codes, or regulations in the provided document.
+Try to understand what the document is about and what laws it is referring to implicitly from context.
+Examples: Codul civil, Codul penal, Codul fiscal, Codul muncii, Codul silvic, Codul administrativ, Codul rutier, Codul vamal, Codul de procedură civilă, Codul de procedură penală, Codul de procedură fiscală.
 
 ** RESTRICTIONS:
 1. Respond ONLY with a JSON object.
 2. The JSON should contain a single key "references" which is a list of strings.
-3. Each string in the list should be the formal name of the law in the form "REFEENCE_TYPE_NUMBER_YEAR", e.g. "Regulamentul_UE_1234_567" or "Legea nr. 12/2022".
-4. If no references are found, return an empty list.
+3. If no references are found (unlikely), return an empty list.
+4. Do not include explicit references that already appear in the document.
 
-** INPUT TEXT:
-```text
+** INPUT DOCUMENT:
+```
 {text}
 ```
 
@@ -31,8 +34,8 @@ If a reference is already formal, include it as is.
 ```json
 {
   "references": [
-    "Legea nr. 53/2003",
-    "Codul Civil"
+    "Codul civil",
+    "Codul penal"
   ]
 }
 ```
@@ -67,7 +70,8 @@ def extract_implicit_references(text: str) -> list[str]:
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model="gemini-2.0-flash-lite",
+                # model="gemini-2.0-flash-lite",
+                model="gemini-2.5-flash-lite",
                 contents=task,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",

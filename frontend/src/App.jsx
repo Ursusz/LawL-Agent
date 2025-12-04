@@ -8,14 +8,15 @@ import './App.css';
 
 function App() {
   const [loading, setLoading] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
 
   return (
     <Router>
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
         <h1 className="text-4xl font-extrabold mb-6">LawL Agent</h1>
-        {loading && <Loader />}
+        {loading && <Loader sessionId={sessionId} />}
         <Routes>
-          <Route path="/" element={<FileUpload setLoading={setLoading} />} />
+          <Route path="/" element={<FileUpload setLoading={setLoading} setSessionId={setSessionId} />} />
           <Route path="/results" element={<Results />} />
         </Routes>
       </div>

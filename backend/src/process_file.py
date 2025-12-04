@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import UploadFile
 from typing import List, Dict, Any
 from . import parse_documents
@@ -5,23 +7,39 @@ from . import extract_references
 from . import search_laws
 from .models import gemini_reference_extractor
 from .utilities import standardize_law_title
+from .progress_tracker import progress_tracker
 
 
-async def process_file(file: UploadFile) -> Dict[str, Any]:
+async def process_file(file: UploadFile, session_id: str = None) -> Dict[str, Any]:
     try:
         document_text = await parse_documents.parse_file(file.filename, await file.read())
         print(document_text)
         
         # 1. Regex-based extraction
+        if session_id:
+            await progress_tracker.emit_reference_extraction_start(session_id, 'explicit')
+        
         regex_references = extract_references.extract_law_references(document_text)
         print(f"Regex references: {regex_references}")
         
+        if session_id:
+            await progress_tracker.emit_reference_extraction_complete(session_id, 'explicit', regex_references)
+        
         # 2. LLM-based implicit extraction
-        implicit_references = gemini_reference_extractor.extract_implicit_references(document_text)
+        if session_id:
+            await progress_tracker.emit_reference_extraction_start(session_id, 'implicit')
+        
+        # Run blocking Gemini call in a separate thread to avoid blocking the event loop
+        implicit_references = await asyncio.to_thread(
+            gemini_reference_extractor.extract_implicit_references, 
+            document_text
+        )
         print(f"Implicit references: {implicit_references}")
         
         # 3. Merge and standardize
         all_references = set(regex_references)
+        sanitized_implicit_refs = []  # Track sanitized names for progress events
+        
         for ref in implicit_references:
             std_ref = standardize_law_title.standardize_law_title(ref)
             if std_ref:
@@ -37,6 +55,7 @@ async def process_file(file: UploadFile) -> Dict[str, Any]:
                 
                 if law_reference_standard:
                     all_references.add(law_reference_standard)
+                    sanitized_implicit_refs.append(law_reference_standard)
             else:
                 # Fallback: if standardization fails, use the original reference
                 # This allows searching for things like "Codul Fiscal" directly
@@ -54,10 +73,15 @@ async def process_file(file: UploadFile) -> Dict[str, Any]:
                 sanitized_ref = re.sub(r'[ /]', '_', sanitized_ref)
                 sanitized_ref = sanitized_ref[:100]
                 all_references.add(sanitized_ref)
+                sanitized_implicit_refs.append(sanitized_ref)
+        
+        # Emit extraction complete with sanitized names so frontend can match them with processing events
+        if session_id:
+            await progress_tracker.emit_reference_extraction_complete(session_id, 'implicit', sanitized_implicit_refs)
         
         references = list(all_references)
         print(f"Final merged references: {references}")
-        laws = search_laws.find_laws(references, document_text)
+        laws = await search_laws.find_laws(references, document_text, session_id)
         results = {
             "filename": file.filename,
             "references": references,

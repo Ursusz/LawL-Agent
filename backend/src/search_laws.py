@@ -1,8 +1,10 @@
 import os
+import asyncio
 from PyPDF2 import PdfReader
 from .models import bm25, gemini_summary
 from .web_scraping import brave_search_api
 from .utilities import cloud_file_management
+from .progress_tracker import progress_tracker
 
 REFERENCE_DOCS_DIR = '../reference_docs'
 
@@ -65,7 +67,8 @@ def fetch_cloud_reference(fileId): #downloading from gdrive
 
   return file_content, url 
 
-def find_laws(references, document_text):
+async def find_laws(references, document_text, session_id: str = None):
+
   import time
   from .utilities import law_reference_mappings
   
@@ -81,6 +84,10 @@ def find_laws(references, document_text):
   for ref in references:
     print("\n\n")
     print(f"Processing reference {ref}")
+    
+    # Emit progress: starting to process this reference
+    if session_id:
+      await progress_tracker.emit_reference_processing_start(session_id, ref)
 
     law_text = ''
     url = ''
@@ -91,11 +98,16 @@ def find_laws(references, document_text):
     mapped_ref = law_reference_mappings.get_normalized_reference(ref)
     if mapped_ref:
       print(f"Found mapping: '{ref}' -> '{mapped_ref}'")
+      
+      # Emit progress: checking cloud for mapped reference
+      if session_id:
+        await progress_tracker.emit_reference_stage_update(session_id, ref, 'checking_cloud')
+      
       # Try to find the file with the normalized name
-      fileId = find_cloud_reference(f'{mapped_ref}.txt')
+      fileId = await asyncio.to_thread(find_cloud_reference, f'{mapped_ref}.txt')
       if fileId:
         print(f"Found law using mapping: {ref} -> {mapped_ref}")
-        law_text, url = fetch_cloud_reference(fileId)
+        law_text, url = await asyncio.to_thread(fetch_cloud_reference, fileId)
         normalized_ref = mapped_ref
       else:
         # Mapping exists but file not found, continue with normal lookup
@@ -103,8 +115,12 @@ def find_laws(references, document_text):
     
     # If not found via mapping, try normal lookup
     if not law_text:
+      # Emit progress: checking for law text
+      if session_id:
+        await progress_tracker.emit_reference_stage_update(session_id, ref, 'checking_cloud')
+      
       # First, try to find in cloud with original reference
-      fileId = find_cloud_reference(f'{ref}.txt')
+      fileId = await asyncio.to_thread(find_cloud_reference, f'{ref}.txt')
       
       # If not found and ref looks like a sanitized implicit reference (contains underscores, no numbers),
       # it might have been saved with a normalized name previously
@@ -116,9 +132,13 @@ def find_laws(references, document_text):
         pass
       
       if fileId is not None:
-        law_text, url = fetch_cloud_reference(fileId) #download from gdrive
+        law_text, url = await asyncio.to_thread(fetch_cloud_reference, fileId) #download from gdrive
       elif len(law_text) == 0:
-        law_text, url, normalized_ref = fetch_online_reference(ref) #browse on brave and scrape the content
+        # Emit progress: fetching online
+        if session_id:
+          await progress_tracker.emit_reference_stage_update(session_id, ref, 'fetching_online')
+        
+        law_text, url, normalized_ref = await asyncio.to_thread(fetch_online_reference, ref) #browse on brave and scrape the content
         
         # If we got a normalized reference from web scraping, save the mapping
         if normalized_ref and normalized_ref != ref:
@@ -137,19 +157,27 @@ def find_laws(references, document_text):
       top_article = relevant_articles_with_scores[0][0] if relevant_articles_with_scores else ""
       
       # Check for cached summary first
+      if session_id:
+        await progress_tracker.emit_reference_stage_update(session_id, ref, 'checking_cache')
+      
       print(f"Checking for cached summary for {final_ref}")
-      cached_summary_file = cloud_file_management.search_summary_in_cloud(final_ref)
+      cached_summary_file = await asyncio.to_thread(cloud_file_management.search_summary_in_cloud, final_ref)
       
       law_summary_data = None
       if cached_summary_file:
         # Load cached summary
-        law_summary_data = cloud_file_management.download_summary_content(cached_summary_file['id'])
+        law_summary_data = await asyncio.to_thread(cloud_file_management.download_summary_content, cached_summary_file['id'])
         if law_summary_data:
           print("[CACHE HIT] Using cached full law summary")
+          if session_id:
+            await progress_tracker.emit_reference_stage_update(session_id, ref, 'law_summary', cached=True)
       
       # If no cached summary, generate it
       if not law_summary_data:
         print("[CACHE MISS] Generating full law summary")
+        
+        if session_id:
+          await progress_tracker.emit_reference_stage_update(session_id, ref, 'generating_law_summary', cached=False)
         
         # Estimate tokens for full law summary call
         estimated_input_chars = len(law_text) + 500  # law_text + prompt overhead
@@ -169,13 +197,13 @@ def find_laws(references, document_text):
         if tokens_used_this_minute + estimated_input_tokens > token_budget_per_minute:
           wait_time = 60 - elapsed_time + 1  # Wait until next minute + 1 sec buffer
           print(f"[RATE LIMIT] Approaching token limit ({tokens_used_this_minute}/{token_budget_per_minute}), waiting {wait_time:.1f}s")
-          time.sleep(wait_time)
+          await asyncio.sleep(wait_time)
           tokens_used_this_minute = 0
           minute_start_time = time.time()
         
         # Generate full law summary
         print("Generating full law summary with Gemini")
-        law_summary_data = gemini_summary.get_full_law_summary(law_text)
+        law_summary_data = await asyncio.to_thread(gemini_summary.get_full_law_summary, law_text)
         
         # Update token counter
         tokens_used_this_minute += estimated_input_tokens
@@ -184,10 +212,13 @@ def find_laws(references, document_text):
         # Save to cache if successful
         if law_summary_data:
           print("Saving full law summary to cache")
-          cloud_file_management.save_summary_in_cloud(final_ref, law_summary_data)
+          await asyncio.to_thread(cloud_file_management.save_summary_in_cloud, final_ref, law_summary_data)
       
       # Always generate targeted article summary (not cached, depends on context)
       print("Generating targeted article summary")
+      
+      if session_id:
+        await progress_tracker.emit_reference_stage_update(session_id, ref, 'generating_article_summary', cached=False)
       
       # Estimate tokens for targeted article summary call
       estimated_input_chars = len(law_text) + len(top_article) + 500
@@ -207,12 +238,12 @@ def find_laws(references, document_text):
       if tokens_used_this_minute + estimated_input_tokens > token_budget_per_minute:
         wait_time = 60 - elapsed_time + 1
         print(f"[RATE LIMIT] Approaching token limit ({tokens_used_this_minute}/{token_budget_per_minute}), waiting {wait_time:.1f}s")
-        time.sleep(wait_time)
+        await asyncio.sleep(wait_time)
         tokens_used_this_minute = 0
         minute_start_time = time.time()
       
       # Generate targeted article summary
-      article_summary_data = gemini_summary.get_targeted_article_summary(law_text, top_article)
+      article_summary_data = await asyncio.to_thread(gemini_summary.get_targeted_article_summary, '\n'.join([article for article, _ in relevant_articles_with_scores]), document_text)
       
       # Update token counter
       tokens_used_this_minute += estimated_input_tokens
@@ -221,6 +252,11 @@ def find_laws(references, document_text):
       # Combine results
       if law_summary_data and article_summary_data:
         print("Successfully generated/retrieved all summaries")
+        
+        # Emit progress: reference complete
+        if session_id:
+          await progress_tracker.emit_reference_complete(session_id, ref, success=True)
+        
         # Use original ref as key for frontend compatibility
         # But include normalized_ref for future lookups
         laws[ref] = {
@@ -237,6 +273,9 @@ def find_laws(references, document_text):
           laws[ref]["normalized_reference"] = normalized_ref
       elif law_summary_data and not article_summary_data:
         # Partial success - have full summary but article summary failed
+        if session_id:
+          await progress_tracker.emit_reference_complete(session_id, ref, success=True)
+        
         laws[ref] = {
           "url": url if len(url) > 0 else "No url available",
           "law": law_text,
@@ -250,10 +289,16 @@ def find_laws(references, document_text):
           laws[ref]["normalized_reference"] = normalized_ref
       else:
         # Complete failure
+        if session_id:
+          await progress_tracker.emit_reference_complete(session_id, ref, success=False, error="Gemini failed to generate summaries")
+        
         laws[ref] = {
           "ERROR": f"Gemini failed to generate summaries."
         }
     else:
+      if session_id:
+        await progress_tracker.emit_reference_complete(session_id, ref, success=False, error="Law text not found")
+      
       laws[ref] = {
         "ERROR": f"Law text not found."
       }
