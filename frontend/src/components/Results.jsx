@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Copy, Check } from 'lucide-react';
 
 function parse_law_title(law_title) {
-  return (law_title.charAt(0).toUpperCase() + law_title.slice(1).toLowerCase()).replace('_', ' ').replace(/_/g, '/')
+  return (law_title.charAt(0).toUpperCase() + law_title.slice(1).toLowerCase()).replace(/_/g, ' ') // .replace(/_/g, '/')
 }
 
 function renderTextWithLinks(text) {
@@ -67,7 +67,8 @@ function Results() {
     Object.entries(item.law_details).forEach(([lawRef, law_details]) => {
       if (law_details.ERROR) return;
 
-      allText += `# ${parse_law_title(lawRef)}\n\n`;
+      const displayRef = law_details.normalized_reference || lawRef;
+      allText += `# ${parse_law_title(displayRef)}\n\n`;
 
       if (law_details.law) {
         allText += `## ⚖️ Lege\n${law_details.law}\n\n`;
@@ -225,7 +226,10 @@ function Results() {
                       {/* References Section */}
                       {item.references?.length > 0 && (
                         <p className="text-sm" style={{ color: 'hsla(30, 5%, 43%, 1)' }}>
-                          <span className="font-semibold">Referințe:</span> {item.references.map(ref => parse_law_title(ref)).join(', ')}
+                          <span className="font-semibold">Referințe:</span> {item.references.map(ref => {
+                            const details = item.law_details?.[ref];
+                            return parse_law_title(details?.normalized_reference || ref);
+                          }).join(', ')}
                         </p>
                       )}
 
@@ -245,12 +249,13 @@ function Results() {
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'hsla(138, 29%, 25%, 0.15)'}
                                   onClick={() => setOpenLaw(openLaw === lawRef ? null : lawRef)}
                                 >
-                                  📜 {parse_law_title(lawRef)}
+                                  📜 {parse_law_title(law_details.normalized_reference || lawRef)}
                                 </button>
                                 {!law_details.ERROR && (
                                   <button
                                     onClick={() => {
-                                      const lawText = `# ${parse_law_title(lawRef)}\n\n` +
+                                      const displayRef = law_details.normalized_reference || lawRef;
+                                      const lawText = `# ${parse_law_title(displayRef)}\n\n` +
                                         (law_details.law ? `## ⚖️ Lege\n${law_details.law}\n\n` : '') +
                                         (law_details.law_summary ? `## 📋 Sumar Lege\n${law_details.law_summary}\n\n` : '') +
                                         (law_details.relevant_article ? `## 📜 Articol Relevant\n${law_details.relevant_article}\n\n` : '') +
