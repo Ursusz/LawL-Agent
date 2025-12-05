@@ -521,36 +521,40 @@ export const processManualEdit = (
     const lastEdit = manualEdits[manualEdits.length - 1];
 
     // Calculate what changed
-    const addedText = offset > 0 ? newText.slice(editPosition, editPosition + offset) : '';
-    const removedText = offset < 0 ? oldText.slice(editPosition, editPosition - offset) : '';
+    // Calculate what changed by finding the common suffix
+    // editPosition is the start of the difference (common prefix length)
+    const start = editPosition;
 
-    // For this edit, determine start/end in the NEW text
-    let start, end, original, replacement;
+    // Find common suffix length, but ensure it doesn't overlap with the prefix
+    let commonSuffixLength = 0;
+    const maxSuffixLength = Math.min(
+        oldText.length - start,
+        newText.length - start
+    );
 
-    if (offset > 0) {
-        // Insertion
-        start = editPosition;
-        end = editPosition + offset;
-        original = ''; // Nothing was there before
-        replacement = addedText;
-    } else {
-        // Deletion
-        start = editPosition;
-        end = editPosition; // Deletion has 0 length in new text
-        original = removedText;
-        replacement = '';
+    while (commonSuffixLength < maxSuffixLength) {
+        if (oldText[oldText.length - 1 - commonSuffixLength] !== newText[newText.length - 1 - commonSuffixLength]) {
+            break;
+        }
+        commonSuffixLength++;
     }
+
+    const end = oldText.length - commonSuffixLength;
+    const original = oldText.slice(start, end);
+    const replacement = newText.slice(start, newText.length - commonSuffixLength);
 
     // Try to merge with last edit if positions are consecutive
     let merged = false;
     let newManualEdits = [...manualEdits];
 
-    if (lastEdit && !lastEdit.isUndone) {
-        // Check if this edit is consecutive or overlapping with the last one
+    // Only attempt merge for pure insertions or deletions to avoid complexity with replacements
+    const isPureInsertion = original.length === 0 && replacement.length > 0;
+    const isPureDeletion = original.length > 0 && replacement.length === 0;
 
-        if (offset > 0 && editPosition === lastEdit.end) {
+    if (lastEdit && !lastEdit.isUndone) {
+        if (isPureInsertion && start === lastEdit.end) {
             // Consecutive insertion - merge
-            lastEdit.end = end;
+            lastEdit.end = start + replacement.length;
             lastEdit.replacement = lastEdit.replacement + replacement;
             lastEdit.redactedItemsAfter = redactedItemsAfter;
             lastEdit.timestamp = timestamp;
@@ -560,14 +564,14 @@ export const processManualEdit = (
                 newManualEdits.pop();
             }
             merged = true;
-        } else if (offset < 0 && editPosition >= lastEdit.start && editPosition <= lastEdit.end) {
+        } else if (isPureDeletion && start >= lastEdit.start && start <= lastEdit.end) {
             // Deleting within or at the boundary of the last edit
 
             // Check if we're backspacing recently added text
-            if (editPosition === lastEdit.end - removedText.length && lastEdit.replacement.endsWith(removedText)) {
+            if (start === lastEdit.end - original.length && lastEdit.replacement.endsWith(original)) {
                 // Backspacing recently added text
-                lastEdit.end = lastEdit.end - removedText.length;
-                lastEdit.replacement = lastEdit.replacement.slice(0, -removedText.length);
+                lastEdit.end = lastEdit.end - original.length;
+                lastEdit.replacement = lastEdit.replacement.slice(0, -original.length);
                 lastEdit.redactedItemsAfter = redactedItemsAfter;
                 lastEdit.timestamp = timestamp;
 
@@ -576,10 +580,10 @@ export const processManualEdit = (
                     newManualEdits.pop();
                 }
                 merged = true;
-            } else if (editPosition === lastEdit.start) {
+            } else if (start === lastEdit.start) {
                 // Deleting from the start of the edit (Delete key)
                 // If we're deleting original text, just expand the original
-                lastEdit.original = lastEdit.original + removedText;
+                lastEdit.original = lastEdit.original + original;
                 lastEdit.redactedItemsAfter = redactedItemsAfter;
                 lastEdit.timestamp = timestamp;
 
@@ -590,9 +594,9 @@ export const processManualEdit = (
                 merged = true;
             } else {
                 // Deleting from middle of the edit
-                const relativePos = editPosition - lastEdit.start;
-                lastEdit.end = lastEdit.end - removedText.length;
-                lastEdit.replacement = lastEdit.replacement.slice(0, relativePos) + lastEdit.replacement.slice(relativePos + removedText.length);
+                const relativePos = start - lastEdit.start;
+                lastEdit.end = lastEdit.end - original.length;
+                lastEdit.replacement = lastEdit.replacement.slice(0, relativePos) + lastEdit.replacement.slice(relativePos + original.length);
                 lastEdit.redactedItemsAfter = redactedItemsAfter;
                 lastEdit.timestamp = timestamp;
 
@@ -602,10 +606,10 @@ export const processManualEdit = (
                 }
                 merged = true;
             }
-        } else if (offset < 0 && editPosition === lastEdit.start - 1) {
+        } else if (isPureDeletion && start === lastEdit.start - 1) {
             // Backspace key on original text (moving left, before the edit)
             lastEdit.start = start;
-            lastEdit.original = removedText + lastEdit.original;
+            lastEdit.original = original + lastEdit.original;
             lastEdit.redactedItemsAfter = redactedItemsAfter;
             lastEdit.timestamp = timestamp;
 
@@ -619,26 +623,12 @@ export const processManualEdit = (
 
     if (!merged) {
         // Create new edit
-        // Get the original text from initialText at this position
-        let originalFromInitial = original;
-
-        if (initialText && offset < 0) {
-            // For deletions, get what was originally at this position in initialText
-            // We need to map current position to initial position
-            // This is complex because previous edits may have shifted positions
-            // For now, use the removed text as original if initialText not available at exact position
-            originalFromInitial = removedText;
-        } else if (initialText && offset > 0) {
-            // For insertions, original is empty (nothing was there)
-            originalFromInitial = '';
-        }
-
         newManualEdits.push({
             type: 'Manual Edit',
             timestamp,
             start,
-            end,
-            original: originalFromInitial,
+            end: start + replacement.length,
+            original,
             replacement,
             redactedItemsBefore,
             redactedItemsAfter,

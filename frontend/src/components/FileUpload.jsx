@@ -289,44 +289,42 @@ export default function FileUpload({ setLoading, setSessionId }) {
     e.stopPropagation();
     const edit = manualEdits[index];
 
-    // Simply restore the text state from before this edit
-    // This is stored in redactedItemsBefore's corresponding text state
-    // We need to reconstruct the text by undoing this edit
+    // Calculate the offset this edit created
+    const offset = edit.replacement.length - edit.original.length;
 
-    // Find the text state before this edit by looking at previous edit's after state
-    // or initial state if this is the first edit
-    let textBeforeThisEdit;
-    if (index === 0) {
-      textBeforeThisEdit = initialExtractedText;
-    } else {
-      // Get the text after the previous edit
-      const prevEdit = manualEdits[index - 1];
-      if (prevEdit.isUndone) {
-        // Previous edit is undone, can't redo this one
-        return;
+    // Reconstruct text by applying all edits EXCEPT this one
+    let newText = initialExtractedText;
+    for (let i = 0; i < manualEdits.length; i++) {
+      const e = manualEdits[i];
+      if (i === index || e.isUndone) {
+        // Skip the edit we're undoing and any already undone edits
+        continue;
       }
-      // We need to reconstruct by applying all active edits up to index-1
-      textBeforeThisEdit = initialExtractedText;
-      for (let i = 0; i < index; i++) {
-        const e = manualEdits[i];
-        if (!e.isUndone) {
-          // Apply edit: remove original, insert replacement
-          textBeforeThisEdit = textBeforeThisEdit.slice(0, e.start) + e.replacement + textBeforeThisEdit.slice(e.start + e.original.length);
-        }
-      }
+      // Apply edit: remove original, insert replacement
+      newText = newText.slice(0, e.start) + e.replacement + newText.slice(e.start + e.original.length);
     }
 
-    setExtractedText(textBeforeThisEdit);
-    setPreviousText(textBeforeThisEdit);
+    setExtractedText(newText);
+    setPreviousText(newText);
 
-    // Restore redacted items
+    // Restore redacted items from before this edit
     if (edit.redactedItemsBefore) {
       setRedactedItems(edit.redactedItemsBefore);
     }
 
-    // Mark this edit and all subsequent edits as undone
+    // Mark only this edit as undone and adjust subsequent edits' positions
     const newEdits = manualEdits.map((item, i) => {
-      if (i >= index) return { ...item, isUndone: true };
+      if (i === index) {
+        return { ...item, isUndone: true };
+      }
+      // Adjust positions of edits that come after this one
+      if (i > index && !item.isUndone) {
+        return {
+          ...item,
+          start: item.start - offset,
+          end: item.end - offset
+        };
+      }
       return item;
     });
     setManualEdits(newEdits);
@@ -334,31 +332,45 @@ export default function FileUpload({ setLoading, setSessionId }) {
 
   const handleRedoManualEdit = (index, e) => {
     e.stopPropagation();
-    if (index > 0 && manualEdits[index - 1].isUndone) {
-      return;
-    }
 
     const edit = manualEdits[index];
 
-    // Reconstruct text by applying all active edits up to and including this one
-    let textAfterThisEdit = initialExtractedText;
-    for (let i = 0; i <= index; i++) {
+    // Calculate the offset this edit will create when redone
+    const offset = edit.replacement.length - edit.original.length;
+
+    // Reconstruct text by applying all active edits INCLUDING this one
+    let newText = initialExtractedText;
+    for (let i = 0; i < manualEdits.length; i++) {
       const e = manualEdits[i];
+      if (e.isUndone && i !== index) {
+        // Skip undone edits (except the one we're redoing)
+        continue;
+      }
       // Apply edit: remove original, insert replacement
-      textAfterThisEdit = textAfterThisEdit.slice(0, e.start) + e.replacement + textAfterThisEdit.slice(e.start + e.original.length);
+      newText = newText.slice(0, e.start) + e.replacement + newText.slice(e.start + e.original.length);
     }
 
-    setExtractedText(textAfterThisEdit);
-    setPreviousText(textAfterThisEdit);
+    setExtractedText(newText);
+    setPreviousText(newText);
 
     // Restore redacted items
     if (edit.redactedItemsAfter) {
       setRedactedItems(edit.redactedItemsAfter);
     }
 
-    // Mark this edit as active
+    // Mark this edit as active and adjust subsequent edits' positions
     const newEdits = manualEdits.map((item, i) => {
-      if (i === index) return { ...item, isUndone: false };
+      if (i === index) {
+        return { ...item, isUndone: false };
+      }
+      // Adjust positions of edits that come after this one
+      if (i > index && !item.isUndone) {
+        return {
+          ...item,
+          start: item.start + offset,
+          end: item.end + offset
+        };
+      }
       return item;
     });
     setManualEdits(newEdits);
@@ -377,6 +389,15 @@ export default function FileUpload({ setLoading, setSessionId }) {
     const edit = manualEdits[index];
     const currentText = extractedText;
 
+    // If the edit is undone, the text is already in the "before edit" state
+    // Just remove it from the list without modifying text or redactions
+    if (edit.isUndone) {
+      setManualEdits(manualEdits.filter((_, i) => i !== index));
+      setConfirmRemove(null);
+      return;
+    }
+
+    // Edit is active, so we need to restore the original text
     // Restore original text at [start, end]
     const newText = currentText.slice(0, edit.start) + edit.original + currentText.slice(edit.end);
     const offset = edit.original.length - (edit.end - edit.start);
@@ -384,12 +405,27 @@ export default function FileUpload({ setLoading, setSessionId }) {
     // Adjust redacted items
     const updatedItems = adjustRedactionPositions(edit.redactedItemsBefore || redactedItems, edit.start, offset);
 
+    // Adjust positions of all subsequent edits
+    // When we remove an edit, all edits after it need their positions adjusted
+    const updatedEdits = manualEdits
+      .filter((_, i) => i !== index)
+      .map((e, i) => {
+        // Only adjust edits that come after the removed edit
+        if (i >= index) {
+          // Adjust the edit's positions by the offset
+          return {
+            ...e,
+            start: e.start + offset,
+            end: e.end + offset
+          };
+        }
+        return e;
+      });
+
     setExtractedText(newText);
     setPreviousText(newText);
     setRedactedItems(updatedItems);
-
-    // Remove from list
-    setManualEdits(manualEdits.filter((_, i) => i !== index));
+    setManualEdits(updatedEdits);
     setConfirmRemove(null);
   };
 
