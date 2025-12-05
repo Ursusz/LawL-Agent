@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import json
 import datetime
 import re
+from ..utilities.gemini_utils import get_random_gemini_model
 
 load_dotenv()
 # load_dotenv('.env_test') #used for testing by LLMs
@@ -159,7 +160,7 @@ def get_full_law_summary(law_text):
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model="gemini-2.5-flash-lite",
+                model=get_random_gemini_model(),
                 contents=task,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(thinking_budget=0),
@@ -239,7 +240,7 @@ def get_targeted_article_summary(law_text, relevant_article):
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model=get_random_gemini_model(),
                 contents=task,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(thinking_budget=0),
@@ -311,7 +312,7 @@ def get_gemini_informations_about_law(law_text, relevant_article):
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model="gemini-2.0-flash-lite",
+                model=get_random_gemini_model(),
                 contents=task,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(thinking_budget=0),

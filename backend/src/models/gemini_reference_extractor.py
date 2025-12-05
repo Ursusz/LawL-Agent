@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import json
 import datetime
 import re
+from ..utilities.gemini_utils import get_random_gemini_model
 
 load_dotenv()
 # load_dotenv('.env_test') #used for testing by LLMs
@@ -76,7 +77,7 @@ def extract_implicit_references(text: str) -> list[str]:
         try:
             response = client.models.generate_content(
                 # model="gemini-2.0-flash-lite",
-                model="gemini-2.5-flash-lite",
+                model=get_random_gemini_model(),
                 contents=task,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json",
