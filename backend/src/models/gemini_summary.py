@@ -7,6 +7,7 @@ import datetime
 import re
 
 load_dotenv()
+# load_dotenv('.env_test') #used for testing by LLMs
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
@@ -144,6 +145,14 @@ def get_full_law_summary(law_text):
     import time
     
     print(f"[GEMINI][{get_time()}] get full law summary")
+
+    if os.environ.get("MOCK_GEMINI", "false").lower() == "true":
+        print(f"[GEMINI][{get_time()}] MOCK MODE: Returning mock full law summary")
+        return {
+            'law_summary': "Aceasta este o rezumare simulată a legii. Legea reglementează aspecte importante privind funcționarea instituțiilor.",
+            'law_simplified': "Legea explicată simplu: Trebuie să respecți regulile stabilite pentru a evita sancțiunile."
+        }
+
     task = FULL_LAW_SUMMARY_PROMPT.replace("{law_text}", law_text)
     
     max_retries = 3
@@ -217,6 +226,13 @@ def get_targeted_article_summary(law_text, relevant_article):
     import time
     
     print(f"[GEMINI][{get_time()}] get targeted article summary")
+
+    if os.environ.get("MOCK_GEMINI", "false").lower() == "true":
+        print(f"[GEMINI][{get_time()}] MOCK MODE: Returning mock targeted article summary")
+        return {
+            'articles_summary': "Articolul relevant specifică faptul că termenele de depunere sunt stricte și trebuie respectate conform procedurii."
+        }
+
     task = TARGETED_ARTICLE_SUMMARY_PROMPT.replace("{law_text}", law_text).replace("{relevant_article}", relevant_article)
     
     max_retries = 3
@@ -280,6 +296,15 @@ def get_gemini_informations_about_law(law_text, relevant_article):
     import time
     
     print(f"[GEMINI][{get_time()}] get info")
+
+    if os.environ.get("MOCK_GEMINI", "false").lower() == "true":
+        print(f"[GEMINI][{get_time()}] MOCK MODE: Returning mock info")
+        return [
+            "Rezumat lege simulat.",
+            "Lege simplificată simulată.",
+            "Rezumat articole simulat."
+        ]
+
     task = TASK_PROMPT.replace("{law_text}", law_text).replace("{relevant_article}", relevant_article)
     
     max_retries = 3

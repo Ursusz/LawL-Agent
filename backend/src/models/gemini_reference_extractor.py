@@ -7,6 +7,7 @@ import datetime
 import re
 
 load_dotenv()
+# load_dotenv('.env_test') #used for testing by LLMs
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
@@ -65,6 +66,10 @@ def extract_implicit_references(text: str) -> list[str]:
     truncated_text = text[:30000]
     
     task = TASK_PROMPT.replace("{text}", truncated_text)
+    
+    if os.environ.get("MOCK_GEMINI", "false").lower() == "true":
+        print(f"[GEMINI][{get_time()}] MOCK MODE: Returning mock implicit references")
+        return ["Codul civil", "Codul penal", "Legea 31/1990"]
     
     max_retries = 3
     for attempt in range(max_retries):
