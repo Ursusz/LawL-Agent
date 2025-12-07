@@ -1,14 +1,13 @@
 from google import genai
 from google.genai import types
 import os
-from dotenv import load_dotenv
+from .. import config
 import json
 import datetime
 import re
 from ..utilities.gemini_utils import get_random_gemini_model
 
-load_dotenv()
-# load_dotenv('.env_test') #used for testing by LLMs
+
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 

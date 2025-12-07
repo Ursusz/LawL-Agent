@@ -1,10 +1,10 @@
 import requests
-from dotenv import load_dotenv
+from .. import config
 import os
 from . import web_scraper
 import json
 
-load_dotenv()
+
 brave_api_key = os.getenv("BRAVE_SEARCH_API_KEY")
 
 TRUSTED_DOMAINS = [
