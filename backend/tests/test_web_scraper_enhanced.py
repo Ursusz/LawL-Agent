@@ -176,17 +176,18 @@ class TestEnhancedWebScraper(unittest.TestCase):
             return mock_response
         
         mock_get.side_effect = get_side_effect
-        mock_cloud.save_file_in_cloud.return_value = 'test_file_id'
+        mock_cloud.update_file_in_cloud.return_value = 'test_file_id'
         mock_cloud.search_file_in_cloud.return_value = None
         
         # Execute
         result = get_leg_just_ro_content('https://legislatie.just.ro/Public/DetaliiDocument/259888', 'HG 1188 2022')
         
-        # Verify file was saved
-        self.assertEqual(result, 'test_file_id')
+        # Verify file was saved - result is a tuple (file_id, normalized_ref)
+        file_id, normalized_ref = result
+        self.assertEqual(file_id, 'test_file_id')
         
         # Verify the saved content includes linked document
-        save_call_args = mock_cloud.save_file_in_cloud.call_args[0][0]
+        save_call_args = mock_cloud.update_file_in_cloud.call_args[0][0]
         with open(save_call_args, 'r') as f:
             saved_content = f.read()
         
@@ -199,8 +200,8 @@ class TestEnhancedWebScraper(unittest.TestCase):
     @patch('src.web_scraping.web_scraper.requests.get')
     def test_get_leg_just_ro_content_long_doc_no_linked_fetch(self, mock_get, mock_cloud):
         """Test that long documents don't trigger linked document fetching."""
-        # Mock main document response (long content - over 500 chars)
-        long_content = "A" * 600  # 600 characters
+        # Mock main document response (long content - over 2000 chars)
+        long_content = "A" * 2100  # 2100 characters - above SHORT_DOCUMENT_THRESHOLD
         main_html = f"""
         <html>
         <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
@@ -216,7 +217,8 @@ class TestEnhancedWebScraper(unittest.TestCase):
         mock_response = Mock()
         mock_response.content = main_html.encode('utf-8')
         mock_get.return_value = mock_response
-        mock_cloud.save_file_in_cloud.return_value = 'test_file_id'
+        mock_cloud.update_file_in_cloud.return_value = 'test_file_id'
+        mock_cloud.search_file_in_cloud.return_value = None
         
         # Execute
         result = get_leg_just_ro_content('https://legislatie.just.ro/Public/DetaliiDocument/test', 'TEST_LAW')
@@ -224,8 +226,12 @@ class TestEnhancedWebScraper(unittest.TestCase):
         # Verify only one request was made (main document, no linked docs)
         self.assertEqual(mock_get.call_count, 1)
         
+        # Verify result is a tuple
+        file_id, normalized_ref = result
+        self.assertEqual(file_id, 'test_file_id')
+        
         # Verify saved content does NOT include linked document marker
-        save_call_args = mock_cloud.save_file_in_cloud.call_args[0][0]
+        save_call_args = mock_cloud.update_file_in_cloud.call_args[0][0]
         with open(save_call_args, 'r') as f:
             saved_content = f.read()
         
@@ -251,7 +257,8 @@ class TestEnhancedWebScraper(unittest.TestCase):
         mock_response = Mock()
         mock_response.content = main_html.encode('utf-8')
         mock_get.return_value = mock_response
-        mock_cloud.save_file_in_cloud.return_value = 'test_file_id'
+        mock_cloud.update_file_in_cloud.return_value = 'test_file_id'
+        mock_cloud.search_file_in_cloud.return_value = None
         
         # Execute
         result = get_leg_just_ro_content('https://legislatie.just.ro/Public/DetaliiDocument/test', 'TEST_LAW')
@@ -286,13 +293,15 @@ class TestEnhancedWebScraper(unittest.TestCase):
                 raise Exception("Network error")
         
         mock_get.side_effect = get_side_effect
-        mock_cloud.save_file_in_cloud.return_value = 'test_file_id'
+        mock_cloud.update_file_in_cloud.return_value = 'test_file_id'
+        mock_cloud.search_file_in_cloud.return_value = None
         
         # Execute - should not raise exception
         result = get_leg_just_ro_content('https://legislatie.just.ro/Public/DetaliiDocument/test', 'TEST_LAW')
         
-        # Should still return successfully
-        self.assertEqual(result, 'test_file_id')
+        # Should still return successfully - result is a tuple
+        file_id, normalized_ref = result
+        self.assertEqual(file_id, 'test_file_id')
 
 
 if __name__ == '__main__':
