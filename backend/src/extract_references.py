@@ -1,13 +1,13 @@
 import re
-from utilities import standardize_law_title
+from .utilities import standardize_law_title
 
 LAW_REGEXES = [
-    r"(?:Lege|Legea|Legii|L\.?)\s*(?:[^\d]*)?\s*(?:nr\.?\s*)?\d+(?:/\d+)*",
-    r"(?:Hotărârea|Hotararea\s+Guvernului|H\.?G\.?)\s*(?:nr\.?)\s*\d+(?:/\d+)*",
-    r"(?:Ordonanța|Ordonanței|Ordonanta|Ordonantei|O\.?G\.?)\s*(?:nr\.?)\s*\d+(?:/\d+)*",
-    r"(?:Ordonanța|Ordonanta\s+de\s+urgență|Ordonanta\s+de\s+urgenta|O\.?U\.?G\.?)\s*(?:nr\.?)\s*\d+(?:/\d+)*",
+    r"(?:Lege|Legea|Legii|L\.?)\s*(?:[^\d]*)?\s*(?:nr\.?\s*)?\d+(?:/\d+)*(?:\s+din\s+)?(?:19\d{2}|20\d{2})?",
+    r"(?:(?:Hotărârea|Hotararea)\s+Guvernului|H\.?G\.?)\s*(?:nr\.?)?\s*\d+(?:/\d+)*(?:\s+din\s+)?(?:19\d{2}|20\d{2})?",
+    r"(?:Ordonanța|Ordonanței|Ordonanta|Ordonantei|O\.?G\.?)\s*(?:nr\.?)?\s*\d+(?:/\d+)*(?:\s+din\s+)?(?:19\d{2}|20\d{2})?",
+    r"(?:(?:Ordonanța|Ordonanta)\s+de\s+(?:urgență|urgenta)|O\.?U\.?G\.?)\s*(?:nr\.?)?\s*\d+(?:/\d+)*(?:\s+din\s+)?(?:19\d{2}|20\d{2})?",
     r"(?:Codul|Cod)(?:\s+(?:Civil|Penal|Muncii|Fiscal))?",
-    r"(?:Decizia|Hotărârea|Hotararea|Ordinul|Decretul|Instrucțiunea|Instructiunea|Norma|Norma\s+metodologica)\s*(?:nr\.?)\s*\d+(?:/\d+)*"
+    r"(?:Decizia|Hotărârea|Hotararea|Ordinul|Decretul|Instrucțiunea|Instructiunea|Norma|Norma\s+metodologica)\s*(?:nr\.?)?\s*\d+(?:/\d+)*(?:\s+din\s+)?(?:19\d{2}|20\d{2})?"
 ]
     
 def extract_law_references(text):
@@ -28,6 +28,6 @@ def extract_law_references(text):
                       law_reference_standard = f'{tip_act}_{nr_act1}_{nr_act2}_{an_act}'
                     else:
                         continue
-                if law_reference_standard is not '':
+                if law_reference_standard != '':
                     refs.add(law_reference_standard)
     return list(refs)

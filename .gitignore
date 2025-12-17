@@ -3,3 +3,7 @@ __pycache__/
 .env
 TMP
 service_account_key.json
+
+backend/TMP/
+backend/tests/manual/
+*.pdf

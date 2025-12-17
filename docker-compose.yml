@@ -1,28 +1,22 @@
-version: "3.8"
-
 services:
   backend:
     build: ./backend
-    container_name: lawl_backend
+    container_name: myapp-backend
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-    networks:
-      - lawl_net
+      # Mount the credentials file into the container
+      # Make sure the path on the left is correct for your local machine
+      - ./backend/src/utilities/credentials.json:/app/src/utilities/credentials.json:ro
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
-    container_name: lawl_frontend
+    container_name: myapp-frontend
     ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/app
-    stdin_open: true
-    tty: true
-    networks:
-      - lawl_net
-
-networks:
-  lawl_net:
-    driver: bridge
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

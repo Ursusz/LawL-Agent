@@ -1,7 +1,8 @@
 from rank_bm25 import BM25Okapi
 import re
 
-ART_FRAGMENT_REGEX = r'(?:Articolul|ART\.)\s+(?:[IVXLCDM]+|\d+)[\s\S]*?(?=(?:Articolul|ART\.)\s+(?:[IVXLCDM]+|\d+)|$)'
+ART_FRAGMENT_REGEX = r'(?:Articolul|ART\.)(?:\s+\(din Anexa\))?\s+(?:[IVXLCDM]+|\d+)[\s\S]*?(?=(?:Articolul|ART\.)(?:\s+\(din Anexa\))?\s+(?:[IVXLCDM]+|\d+)|$)'
+ART_FRAGMENT_REGEX2 = r'(?:Articolul|ART\.)?(?:\s+\(din Anexa\))?\s+(?:[IVXLCDM]+|\d+)[\s\S]*?(?=(?:Articolul|ART\.)?(?:\s+\(din Anexa\))?\s+(?:[IVXLCDM]+|\d+)|$)'
 
 def is_example_article(article_text):
     example_regex = r'Exemplul|Exemple privind'
@@ -9,6 +10,8 @@ def is_example_article(article_text):
 
 def extract_law_fragments(law_text):
     fragments = re.findall(ART_FRAGMENT_REGEX, law_text)
+    if not fragments:
+        fragments = re.findall(ART_FRAGMENT_REGEX2, law_text)
     
     filtered_articles = []
     for fragm in fragments:
@@ -34,6 +37,6 @@ def get_most_relevant_fragment(law_text, context):
 
     scores = bm25.get_scores(query_tokens)
 
-    most_relevant_fragment_index = sorted(range(len(scores)), key=lambda x: scores[x], reverse=True)[:1]
+    most_relevant_indices = sorted(range(len(scores)), key=lambda x: scores[x], reverse=True)[:5]
 
-    return text_fragments[most_relevant_fragment_index[0]]
+    return [(text_fragments[i], scores[i]) for i in most_relevant_indices]

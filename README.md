@@ -45,11 +45,7 @@ BRAVE_SEARCH_API_KEY=your_api_key
     ```
 4.
     ```bash
-    cd src
-    ```
-5. 
-    ```bash
-    uvicorn main:app --reload
+    uv run python -m uvicorn src.main:app --reload
     ```
     Serverul va porni pe `http://127.0.0.1:8000`.
 
@@ -70,3 +66,44 @@ BRAVE_SEARCH_API_KEY=your_api_key
     npm start
     ```
     Aplicatia se va deschide pe `http://localhost:3000`.
+
+***
+
+### 3. Rulare Teste
+
+#### Backend
+
+1. Navigheaza in folderul `backend`:
+    ```bash
+    cd backend
+    ```
+2. Activeaza mediul virtual (daca nu este deja activat):
+    ```bash
+    source lawl/bin/activate
+    ```
+3. Ruleaza testele:
+    ```bash
+    uv run python -m pytest tests
+    ```
+
+#### Frontend
+
+1. Navigheaza in folderul `frontend`:
+    ```bash
+    cd frontend
+    ```
+2. Ruleaza testele unitare:
+    ```bash
+    npm test
+    ```
+    (Pentru a rula o singura data fara watch mode: `npm test -- --watchAll=false`)
+
+3. Ruleaza testele end-to-end (Playwright):
+    ```bash
+    npm run test:e2e
+    ```
+
+4. Ruleaza toate testele cu coverage:
+    ```bash
+    npm run test:coverage:all
+    ```
