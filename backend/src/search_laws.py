@@ -77,7 +77,7 @@ async def find_laws(references, document_text, session_id: str = None):
   # Token tracking to stay under 250k tokens/minute
   # Approximate: 1 char ≈ 0.25 tokens (conservative estimate)
   # We'll track input tokens and add delays if needed
-  token_budget_per_minute = 500000
+  token_budget_per_minute = 200000
   tokens_used_this_minute = 0
   minute_start_time = time.time()
   

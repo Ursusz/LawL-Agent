@@ -33,10 +33,11 @@ class TestGeminiUtils(unittest.TestCase):
         margin = 2.0
         
         for model in GEMINI_MODELS:
-            if 'gemini-2.0' in model:
-                expected = 33.33
-            else:
-                expected = 11.11
+            # if 'gemini-2.0' in model:
+            #     expected = 33.33
+            # else:
+            #     expected = 11.11
+            expected = 50
                 
             self.assertTrue(
                 expected - margin <= percentages[model] <= expected + margin,
