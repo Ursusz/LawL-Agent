@@ -83,8 +83,8 @@ class TestImplicitExtraction(unittest.IsolatedAsyncioTestCase):
                         args, _ = mock_find_laws.call_args
                         extracted_refs = args[0]
                         
-                        # Should contain "Codul_Fiscal" (sanitized) since it doesn't standardize
-                        self.assertIn("Codul_Fiscal", extracted_refs)
+                        # Should contain "LEGE_227_2015" (sanitized) since it uses the mapping
+                        self.assertIn("LEGE_227_2015", extracted_refs)
 
 if __name__ == '__main__':
     unittest.main()

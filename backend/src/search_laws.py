@@ -110,8 +110,8 @@ async def find_laws(references, document_text, session_id: str = None):
         law_text, url = await asyncio.to_thread(fetch_cloud_reference, fileId)
         normalized_ref = mapped_ref
       else:
-        # Mapping exists but file not found, continue with normal lookup
-        print(f"Mapping exists ({ref} -> {mapped_ref}) but file not found, continuing with normal lookup")
+        # Mapping exists but file not found, we'll use the mapped reference for online search
+        print(f"Mapping exists ({ref} -> {mapped_ref}) but file not found, will search online with normalized reference")
     
     # If not found via mapping, try normal lookup
     if not law_text:
@@ -119,8 +119,17 @@ async def find_laws(references, document_text, session_id: str = None):
       if session_id:
         await progress_tracker.emit_reference_stage_update(session_id, ref, 'checking_cloud')
       
-      # First, try to find in cloud with original reference
-      fileId = await asyncio.to_thread(find_cloud_reference, f'{ref}.txt')
+      # Determine which reference to use for searching
+      # If we have a mapping, use the mapped reference; otherwise use the original
+      search_ref = mapped_ref if mapped_ref else ref
+      
+      # First, try to find in cloud with the search reference
+      fileId = await asyncio.to_thread(find_cloud_reference, f'{search_ref}.txt')
+      
+      # If not found and we're using the original ref, also try with the original ref
+      # (in case mapped_ref was used but original ref file exists)
+      if fileId is None and mapped_ref and search_ref != ref:
+        fileId = await asyncio.to_thread(find_cloud_reference, f'{ref}.txt')
       
       # If not found and ref looks like a sanitized implicit reference (contains underscores, no numbers),
       # it might have been saved with a normalized name previously
@@ -133,12 +142,20 @@ async def find_laws(references, document_text, session_id: str = None):
       
       if fileId is not None:
         law_text, url = await asyncio.to_thread(fetch_cloud_reference, fileId) #download from gdrive
+        # If we found it with the search_ref, use that as normalized_ref
+        if not normalized_ref:
+          normalized_ref = search_ref if search_ref != ref else None
       elif len(law_text) == 0:
         # Emit progress: fetching online
         if session_id:
           await progress_tracker.emit_reference_stage_update(session_id, ref, 'fetching_online')
         
-        law_text, url, normalized_ref = await asyncio.to_thread(fetch_online_reference, ref) #browse on brave and scrape the content
+        # Use the search_ref (mapped if available, otherwise original)
+        law_text, url, fetched_normalized_ref = await asyncio.to_thread(fetch_online_reference, search_ref) #browse on brave and scrape the content
+        
+        # Use the normalized reference from web scraping if we got one
+        if fetched_normalized_ref:
+          normalized_ref = fetched_normalized_ref
         
         # If we got a normalized reference from web scraping, save the mapping
         if normalized_ref and normalized_ref != ref:
@@ -238,7 +255,8 @@ async def find_laws(references, document_text, session_id: str = None):
       if tokens_used_this_minute + estimated_input_tokens > token_budget_per_minute:
         wait_time = 60 - elapsed_time + 1
         print(f"[RATE LIMIT] Approaching token limit ({tokens_used_this_minute}/{token_budget_per_minute}), waiting {wait_time:.1f}s")
-        await asyncio.sleep(wait_time)
+        if False: # or not os.environ.get("MOCK_GEMINI", "false").lower() == "true":
+          await asyncio.sleep(wait_time)
         tokens_used_this_minute = 0
         minute_start_time = time.time()
       

@@ -5,7 +5,7 @@ from .. import config
 import json
 import datetime
 import re
-from ..utilities.gemini_utils import get_random_gemini_model
+from ..utilities.gemini_utils import get_random_gemini_model, call_gemini_with_retry
 
 
 
@@ -149,67 +149,46 @@ def get_full_law_summary(law_text):
     if os.environ.get("MOCK_GEMINI", "false").lower() == "true":
         print(f"[GEMINI][{get_time()}] MOCK MODE: Returning mock full law summary")
         return {
-            'law_summary': "Aceasta este o rezumare simulată a legii. Legea reglementează aspecte importante privind funcționarea instituțiilor.",
-            'law_simplified': "Legea explicată simplu: Trebuie să respecți regulile stabilite pentru a evita sancțiunile."
+            'law_summary': "[MOCK] Aceasta este o rezumare simulată a legii. Legea reglementează aspecte importante privind funcționarea instituțiilor.",
+            'law_simplified': "[MOCK] Legea explicată simplu: Trebuie să respecți regulile stabilite pentru a evita sancțiunile."
         }
 
     task = FULL_LAW_SUMMARY_PROMPT.replace("{law_text}", law_text)
     
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model=get_random_gemini_model(),
-                contents=task,
-                config=types.GenerateContentConfig(
-                    thinking_config=types.ThinkingConfig(thinking_budget=0),
-                    max_output_tokens=2048
-                )
+    def make_request():
+        return client.models.generate_content(
+            model=get_random_gemini_model(),
+            contents=task,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                max_output_tokens=2048
             )
-            print(f"[GEMINI][{get_time()}] done full law summary request")
-            
-            raw_json = extract_code_block(response.text, "json")
-            if not raw_json:
-                print("Gemini nu a returnat JSON valid.")
-                return None
-            response = None
-            try:
-                response = json.loads(raw_json)
-            except json.JSONDecodeError as e:
-                print("JSON invalid:", e)
-                return None
-            
-            result = {
-                'law_summary': response.get('law_summary', ''),
-                'law_simplified': response.get('law_simplified', '')
-            }
-            print(f"[GEMINI] notes {response.get('notes', '')}")
-            return result
-            
-        except Exception as e:
-            error_str = str(e)
-            print(f"[GEMINI] Error on attempt {attempt + 1}: {error_str}")
-            
-            # Check if it's a rate limit error
-            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                # Try to parse retry delay from error
-                retry_delay = 35  # Default delay
-                
-                # Try to extract retryDelay from error message
-                import re
-                delay_match = re.search(r'Please retry in (\d+(?:\.\d+)?)s', error_str)
-                if delay_match:
-                    retry_delay = float(delay_match.group(1)) + 1  # Add 1 second buffer
-                
-                if attempt < max_retries - 1:
-                    print(f"[GEMINI] Rate limit hit, waiting {retry_delay} seconds before retry...")
-                    time.sleep(retry_delay)
-                else:
-                    print(f"[GEMINI] Max retries reached, giving up")
-                    return None
-            else:
-                # For other errors, don't retry
-                return None
+        )
+
+    response = call_gemini_with_retry(make_request)
+    print(f"[GEMINI][{get_time()}] done full law summary request")
+    
+    if not response or not response.text:
+        print("Gemini nu a returnat JSON valid sau a eșuat.")
+        return None
+
+    raw_json = extract_code_block(response.text, "json")
+    if not raw_json:
+        print("Gemini nu a returnat JSON valid.")
+        return None
+    
+    try:
+        response_data = json.loads(raw_json)
+    except json.JSONDecodeError as e:
+        print("JSON invalid:", e)
+        return None
+    
+    result = {
+        'law_summary': response_data.get('law_summary', ''),
+        'law_simplified': response_data.get('law_simplified', '')
+    }
+    print(f"[GEMINI] notes {response_data.get('notes', '')}")
+    return result
     
     return None
 
@@ -227,68 +206,47 @@ def get_targeted_article_summary(law_text, relevant_article):
     
     print(f"[GEMINI][{get_time()}] get targeted article summary")
 
-    if os.environ.get("MOCK_GEMINI", "false").lower() == "true":
+    if True: #  or os.environ.get("MOCK_GEMINI", "false").lower() == "true":
         print(f"[GEMINI][{get_time()}] MOCK MODE: Returning mock targeted article summary")
         return {
-            'articles_summary': "Articolul relevant specifică faptul că termenele de depunere sunt stricte și trebuie respectate conform procedurii."
+            'articles_summary': "[MOCK] Articolul relevant specifică faptul că termenele de depunere sunt stricte și trebuie respectate conform procedurii."
         }
 
     task = TARGETED_ARTICLE_SUMMARY_PROMPT.replace("{law_text}", law_text).replace("{relevant_article}", relevant_article)
     
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model=get_random_gemini_model(),
-                contents=task,
-                config=types.GenerateContentConfig(
-                    thinking_config=types.ThinkingConfig(thinking_budget=0),
-                    max_output_tokens=2048
-                )
+    def make_request():
+        return client.models.generate_content(
+            model=get_random_gemini_model(),
+            contents=task,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                max_output_tokens=2048
             )
-            print(f"[GEMINI][{get_time()}] done targeted article summary request")
+        )
+
+    response = call_gemini_with_retry(make_request)
+    print(f"[GEMINI][{get_time()}] done targeted article summary request")
+
+    if not response or not response.text:
+        print("Gemini nu a returnat JSON valid sau a eșuat.")
+        return None
             
-            raw_json = extract_code_block(response.text, "json")
-            if not raw_json:
-                print("Gemini nu a returnat JSON valid.")
-                return None
-            response = None
-            try:
-                response = json.loads(raw_json)
-            except json.JSONDecodeError as e:
-                print("JSON invalid:", e)
-                return None
-            
-            result = {
-                'articles_summary': response.get('articles_summary', '')
-            }
-            print(f"[GEMINI] notes {response.get('notes', '')}")
-            return result
-            
-        except Exception as e:
-            error_str = str(e)
-            print(f"[GEMINI] Error on attempt {attempt + 1}: {error_str}")
-            
-            # Check if it's a rate limit error
-            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                # Try to parse retry delay from error
-                retry_delay = 35  # Default delay
-                
-                # Try to extract retryDelay from error message
-                import re
-                delay_match = re.search(r'Please retry in (\d+(?:\.\d+)?)s', error_str)
-                if delay_match:
-                    retry_delay = float(delay_match.group(1)) + 1  # Add 1 second buffer
-                
-                if attempt < max_retries - 1:
-                    print(f"[GEMINI] Rate limit hit, waiting {retry_delay} seconds before retry...")
-                    time.sleep(retry_delay)
-                else:
-                    print(f"[GEMINI] Max retries reached, giving up")
-                    return None
-            else:
-                # For other errors, don't retry
-                return None
+    raw_json = extract_code_block(response.text, "json")
+    if not raw_json:
+        print("Gemini nu a returnat JSON valid.")
+        return None
+    
+    try:
+        response_data = json.loads(raw_json)
+    except json.JSONDecodeError as e:
+        print("JSON invalid:", e)
+        return None
+    
+    result = {
+        'articles_summary': response_data.get('articles_summary', '')
+    }
+    print(f"[GEMINI] notes {response_data.get('notes', '')}")
+    return result
     
     return None
 
@@ -300,64 +258,44 @@ def get_gemini_informations_about_law(law_text, relevant_article):
     if os.environ.get("MOCK_GEMINI", "false").lower() == "true":
         print(f"[GEMINI][{get_time()}] MOCK MODE: Returning mock info")
         return [
-            "Rezumat lege simulat.",
-            "Lege simplificată simulată.",
-            "Rezumat articole simulat."
+            "[MOCK] Rezumat lege simulat.",
+            "[MOCK] Lege simplificată simulată.",
+            "[MOCK] Rezumat articole simulat."
         ]
 
     task = TASK_PROMPT.replace("{law_text}", law_text).replace("{relevant_article}", relevant_article)
     
-    max_retries = 3
-    for attempt in range(max_retries):
-        try:
-            response = client.models.generate_content(
-                model=get_random_gemini_model(),
-                contents=task,
-                config=types.GenerateContentConfig(
-                    thinking_config=types.ThinkingConfig(thinking_budget=0),
-                    max_output_tokens=2048
-                )
+    def make_request():
+        return client.models.generate_content(
+            model=get_random_gemini_model(),
+            contents=task,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                max_output_tokens=2048
             )
-            print(f"[GEMINI][{get_time()}] done request")
+        )
+
+    response = call_gemini_with_retry(make_request)
+    print(f"[GEMINI][{get_time()}] done request")
+
+    if not response or not response.text:
+        print("Gemini nu a returnat JSON valid sau a eșuat.")
+        return None
             
-            raw_json = extract_code_block(response.text, "json")
-            if not raw_json:
-                print("Gemini nu a returnat JSON valid.")
-                return None
-            response = None
-            try:
-                response = json.loads(raw_json)
-            except json.JSONDecodeError as e:
-                print("JSON invalid:", e)
-                return None
-            responses = [response.get('law_summary', ''), response.get('law_simplified', ''), response.get('articles_summary', '')]
-            print(f"[GEMINI] notes {response.get('notes', '')}")
-            return responses
-            
-        except Exception as e:
-            error_str = str(e)
-            print(f"[GEMINI] Error on attempt {attempt + 1}: {error_str}")
-            
-            # Check if it's a rate limit error
-            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str:
-                # Try to parse retry delay from error
-                retry_delay = 35  # Default delay
-                
-                # Try to extract retryDelay from error message
-                import re
-                delay_match = re.search(r'Please retry in (\d+(?:\.\d+)?)s', error_str)
-                if delay_match:
-                    retry_delay = float(delay_match.group(1)) + 1  # Add 1 second buffer
-                
-                if attempt < max_retries - 1:
-                    print(f"[GEMINI] Rate limit hit, waiting {retry_delay} seconds before retry...")
-                    time.sleep(retry_delay)
-                else:
-                    print(f"[GEMINI] Max retries reached, giving up")
-                    return None
-            else:
-                # For other errors, don't retry
-                return None
+    raw_json = extract_code_block(response.text, "json")
+    if not raw_json:
+        print("Gemini nu a returnat JSON valid.")
+        return None
+    
+    try:
+        response_data = json.loads(raw_json)
+    except json.JSONDecodeError as e:
+        print("JSON invalid:", e)
+        return None
+    
+    responses = [response_data.get('law_summary', ''), response_data.get('law_simplified', ''), response_data.get('articles_summary', '')]
+    print(f"[GEMINI] notes {response_data.get('notes', '')}")
+    return responses
     
     return None
 

@@ -81,7 +81,38 @@ async def process_file(file: UploadFile, session_id: str = None) -> Dict[str, An
         
         references = list(all_references)
         print(f"Final merged references: {references}")
-        laws = await search_laws.find_laws(references, document_text, session_id)
+        
+        # Deduplicate references by resolving to normalized forms
+        # This prevents processing the same law multiple times when different references
+        # map to the same normalized reference (e.g., "Codul_fiscal" and "LEGE_227_2015")
+        from .utilities import law_reference_mappings
+        
+        normalized_to_originals = {}  # Maps normalized ref -> list of original refs
+        for ref in references:
+            mapped_ref = law_reference_mappings.get_normalized_reference(ref)
+            normalized_ref = mapped_ref if mapped_ref else ref
+            
+            if normalized_ref not in normalized_to_originals:
+                normalized_to_originals[normalized_ref] = []
+            normalized_to_originals[normalized_ref].append(ref)
+        
+        # Process only unique normalized references
+        unique_refs = list(normalized_to_originals.keys())
+        if len(unique_refs) < len(references):
+            print(f"Deduplicated references: {len(references)} -> {len(unique_refs)}")
+            print(f"Unique references to process: {unique_refs}")
+        
+        # Process unique references
+        laws = await search_laws.find_laws(unique_refs, document_text, session_id)
+        
+        # Map results back to all original references
+        expanded_laws = {}
+        for normalized_ref, original_refs in normalized_to_originals.items():
+            if normalized_ref in laws:
+                for original_ref in original_refs:
+                    expanded_laws[original_ref] = laws[normalized_ref]
+        
+        laws = expanded_laws
         results = {
             "filename": file.filename,
             "references": references,

@@ -312,25 +312,36 @@ def get_leg_just_ro_content(url, reference):
   response = requests.get(url)
   tree = html.fromstring(response.content)
 
-  # Extract the formal law title from the page
-  law_title = extract_law_title_from_page(tree)
+  # Check if the input reference is already normalized (format: TYPE_NUMBER_YEAR)
+  # If so, we should use it directly instead of trying to re-normalize from the page
+  is_already_normalized = bool(re.match(r'^[A-Z]+_\d+_\d{4}$', reference))
+  
   normalized_ref = None
   
-  if law_title:
-    print(f"Extracted law title: {law_title}")
-    # Try to normalize the extracted title using the specialized function for web pages
-    std_result = standardize_law_title.standardize_law_title_from_page(law_title)
-    if std_result:
-      # Reconstruct the normalized reference
-      if len(std_result) == 3:
-        tip_act, nr_act, an_act = std_result
-        normalized_ref = f'{tip_act}_{nr_act}_{an_act}'
-      elif len(std_result) == 4:
-        tip_act, nr_act1, nr_act2, an_act = std_result
-        normalized_ref = f'{tip_act}_{nr_act1}_{nr_act2}_{an_act}'
-      
-      if normalized_ref:
-        print(f"Normalized to: {normalized_ref}")
+  if is_already_normalized:
+    # Reference is already normalized (e.g., "LEGE_53_2003")
+    # Use it directly - don't try to re-normalize from page title
+    normalized_ref = reference
+    print(f"Using input reference as normalized: {normalized_ref}")
+  else:
+    # Extract the formal law title from the page and try to normalize
+    law_title = extract_law_title_from_page(tree)
+    
+    if law_title:
+      print(f"Extracted law title: {law_title}")
+      # Try to normalize the extracted title using the specialized function for web pages
+      std_result = standardize_law_title.standardize_law_title_from_page(law_title)
+      if std_result:
+        # Reconstruct the normalized reference
+        if len(std_result) == 3:
+          tip_act, nr_act, an_act = std_result
+          normalized_ref = f'{tip_act}_{nr_act}_{an_act}'
+        elif len(std_result) == 4:
+          tip_act, nr_act1, nr_act2, an_act = std_result
+          normalized_ref = f'{tip_act}_{nr_act1}_{nr_act2}_{an_act}'
+        
+        if normalized_ref:
+          print(f"Normalized to: {normalized_ref}")
   
   # Use normalized reference for file name if available, otherwise use original
   file_reference = normalized_ref if normalized_ref else reference
