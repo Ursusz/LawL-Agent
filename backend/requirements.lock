@@ -109,7 +109,9 @@ jinja2==3.1.6
 joblib==1.5.2
     # via scikit-learn
 lxml==6.0.2
-    # via python-docx
+    # via
+    #   -r requirements.in
+    #   python-docx
 markdown-it-py==4.0.0
     # via rich
 markupsafe==3.0.3
@@ -234,6 +236,7 @@ rank-bm25==0.2.2
     # via -r requirements.in
 requests==2.32.5
     # via
+    #   -r requirements.in
     #   google-api-core
     #   google-genai
     #   requests-oauthlib
@@ -286,7 +289,9 @@ threadpoolctl==3.6.0
 torch==2.9.1
     # via stanza
 tqdm==4.67.1
-    # via stanza
+    # via
+    #   -r requirements.in
+    #   stanza
 trio==0.32.0
     # via
     #   selenium

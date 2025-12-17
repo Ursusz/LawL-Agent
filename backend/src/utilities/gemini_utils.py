@@ -1,4 +1,6 @@
+import sys
 import random
+from tqdm import tqdm
 import time
 import re
 
@@ -54,7 +56,13 @@ def call_gemini_with_retry(func, max_retries=3, default_delay=65):
                 
                 if attempt < max_retries - 1:
                     print(f"[GEMINI] Rate limit hit, waiting {retry_delay} seconds before retry...")
-                    time.sleep(retry_delay)
+                    if sys.stdout.isatty():
+                        for _ in tqdm(range(int(retry_delay)), desc="Rate limit cooldown", unit="s"):
+                            time.sleep(1)
+                        # Sleep the remaining fraction of a second
+                        time.sleep(retry_delay - int(retry_delay))
+                    else:
+                        time.sleep(retry_delay)
                 else:
                     print(f"[GEMINI] Max retries reached, giving up")
                     return None

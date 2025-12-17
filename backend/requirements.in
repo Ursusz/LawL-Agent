@@ -17,3 +17,4 @@ rank-bm25
 stanza
 requests
 lxml
+tqdm
