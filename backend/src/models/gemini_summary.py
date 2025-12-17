@@ -206,7 +206,7 @@ def get_targeted_article_summary(law_text, relevant_article):
     
     print(f"[GEMINI][{get_time()}] get targeted article summary")
 
-    if True: #  or os.environ.get("MOCK_GEMINI", "false").lower() == "true":
+    if os.environ.get("MOCK_GEMINI", "false").lower() == "true":
         print(f"[GEMINI][{get_time()}] MOCK MODE: Returning mock targeted article summary")
         return {
             'articles_summary': "[MOCK] Articolul relevant specifică faptul că termenele de depunere sunt stricte și trebuie respectate conform procedurii."

@@ -52,7 +52,7 @@ def call_gemini_with_retry(func, max_retries=3, default_delay=65):
                 # Try to extract retryDelay from error message
                 delay_match = re.search(r'Please retry in (\d+(?:\.\d+)?)s', error_str)
                 if delay_match:
-                    retry_delay = float(delay_match.group(1)) + 1  # Add 1 second buffer
+                    retry_delay = float(delay_match.group(1)) + 3  # Add 3 seconds buffer
                 
                 if attempt < max_retries - 1:
                     print(f"[GEMINI] Rate limit hit, waiting {retry_delay} seconds before retry...")

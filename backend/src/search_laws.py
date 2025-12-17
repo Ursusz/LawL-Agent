@@ -255,7 +255,7 @@ async def find_laws(references, document_text, session_id: str = None):
       if tokens_used_this_minute + estimated_input_tokens > token_budget_per_minute:
         wait_time = 60 - elapsed_time + 1
         print(f"[RATE LIMIT] Approaching token limit ({tokens_used_this_minute}/{token_budget_per_minute}), waiting {wait_time:.1f}s")
-        if False: # or not os.environ.get("MOCK_GEMINI", "false").lower() == "true":
+        if not os.environ.get("MOCK_GEMINI", "false").lower() == "true":
           await asyncio.sleep(wait_time)
         tokens_used_this_minute = 0
         minute_start_time = time.time()
